@@ -10,13 +10,14 @@
 ;;   (= (nth s 0) variable-prefix))
 
 
+(defn count-block? [x]
+  "Is x a count block, e.g. [:count ?/v]?"
+   (and (vector? x) (= :count (first x))))
+
 (defn variable? [x]
-  ;;"Is x a variable (a symbol beginning with '?')?"
   "Is x a variable (a symbol in the variable-ns '?/')?"
   (and (symbol? x)
        (= variable-ns (namespace x))))
-       ;;(variable-string? (name x))))
-
 
 (defn variable [v]
   (cond
@@ -42,6 +43,10 @@
 ;; ([expr] (list-variables expr #'variable? #'nonempty-seq #'seq))
 ;; ([expr var?] (distinct-elements expr var?))
 ;; ([expr var? branch? children] (distinct-elements expr var? branch? children))
+
+(defn count-blocks [expr]
+  "return any count-blocks, e.g. [:count ?/v] from the input"
+   (distinct-elements count-block? expr))
 
 (defn symbols [expr]
   (distinct-elements symbol? expr))

@@ -1,9 +1,6 @@
 (ns edu.ucdenver.ccp.test.kr.test-sparql
   (use clojure.test
-       ;;clojure.test.junit
-
        edu.ucdenver.ccp.test.kr.test-kb
-
        edu.ucdenver.ccp.kr.variable
        edu.ucdenver.ccp.kr.kb
        edu.ucdenver.ccp.kr.rdf
@@ -346,3 +343,34 @@
 ;;; --------------------------------------------------------
 ;;; END
 ;;; --------------------------------------------------------
+
+
+(deftest sym-to-sparql-test
+  (is (= "?a" (sym-to-sparql `?/a)))
+  (is (= "_:a" (sym-to-sparql `_/a)))
+  (is (= "(COUNT (?a) AS ?a_count)" (sym-to-sparql `[:count ?/a])))
+  (is (= "(COUNT (DISTINCT ?a) AS ?a_count)" (sym-to-sparql `[:count :distinct ?/a]))) 
+  )
+
+(def head1
+  `((?/super ex/hasDescendentCount [:count :distinct ?/mid])
+    (?/a ex/blah ?/b)
+    (?/c ex/blahblah ?/d)))
+
+(def head2
+  `((?/super ex/hasDescendentCount [:count ?/mid])
+    (?/a ex/blah ?/b)
+    (?/c ex/blahblah ?/d)))
+
+(def expected-replaced-head
+  `((?/super ex/hasDescendentCount ?/mid_count)
+    (?/a ex/blah ?/b)
+    (?/c ex/blahblah ?/d)))
+
+
+(deftest replace-count-blocks-test
+  (is (= expected-replaced-head (replace-count-blocks head1)))
+  (is (= expected-replaced-head (replace-count-blocks head2))))
+  
+  
+  

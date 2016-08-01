@@ -74,8 +74,22 @@
   (cond
    (variable? s) (str "?" (name s))
    (anon? s) (str "_:" (name s))
+   (count-block? s) (let [count-var (sym-to-sparql (first (variables s)))
+                          distinct-str (if (> (.indexOf s :distinct) 0)
+                                         "DISTINCT " "")]
+                      (str "(COUNT (" distinct-str count-var ") AS " count-var "_count)")) 
    :else (sparql-uri (sym-to-long-name s))))
 ;;:else (str "<" (sym-to-long-name s) ">")))
+
+(defn replace-count-blocks [triple-pattern]
+  "swaps a count block for its sparql variable,
+   e.g. replaces [:count ?/a] with ?/a_count"
+  (map (fn [x] (map #(if (count-block? %) 
+                       (let [count-var (first (variables %))]
+                         (symbol (str count-var "_count")))
+                       %) x)) triple-pattern))
+    
+
 
 (defn sparql-str-lang [s l]
   (str (pr-str s) "@" l))
@@ -432,15 +446,21 @@
         prefixes (get-prefixes-from-namespaces namespaces)]
     (str
      (prefix-block prefixes)
-     (apply str "SELECT " *select-type*
-            (interleave (map sym-to-sparql vars) (repeat " ")))
-     "\n"
-     "WHERE { "
-     (sparql-query-body triple-pattern)
-     "}"
-     (if *select-limit*
-       (str " LIMIT " *select-limit* " ")
-       "")
+      (apply str "SELECT " *select-type*
+             (interleave (map sym-to-sparql vars) (repeat " ")))
+      "\n"
+      "WHERE { "
+      (sparql-query-body triple-pattern)
+      "}"
+      (if *select-limit*
+        (str " LIMIT " *select-limit* " ")
+        "")
+      (if (some count-block? vars)
+        (str "\nGROUP BY " (apply str (interleave
+                                       (map sym-to-sparql
+                                            (filter #(not (count-block? %)) vars))
+                                       (repeat " "))))
+        "")
      )))
 
 
