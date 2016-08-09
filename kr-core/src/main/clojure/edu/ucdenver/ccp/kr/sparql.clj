@@ -477,10 +477,6 @@
                                   (map namespace non-vars))))
                        (distinct (map namespace non-vars)))
         prefixes (get-prefixes-from-namespaces namespaces)]
-    ;; only add if :prefixes-in-head exists in options 
-    (prn (str "NON_VARS " (pr-str non-vars)))
-    (prn (str "NAMESPACES: " (pr-str namespaces)))
-    (prn (str "PREFIXES: " (pr-str prefixes)))
     (str
      (prefix-block prefixes)
       (apply str "SELECT " *select-type*
