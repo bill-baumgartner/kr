@@ -10,6 +10,13 @@
 ;;   (= (nth s 0) variable-prefix))
 
 
+(defn math-block? [x]
+  "Is x a math block, e.g. [:math :float ?/a / ?/b]?"
+  (and (vector? x) (or (= :float (first x))
+                       (= :double (first x))
+                       (= :integer (first x))
+                       (= :decimal (first x)))))
+
 (defn count-block? [x]
   "Is x a count block, e.g. [:count ?/v]?"
    (and (vector? x) (= :count (first x))))
@@ -48,9 +55,37 @@
   "return any count-blocks, e.g. [:count ?/v] from the input"
    (distinct-elements count-block? expr))
 
+(defn math-blocks [expr]
+  "return any math-blocks, e.g. [:math :float ?/a / ?/b] from the input"
+   (distinct-elements math-block? expr))
+
 (defn symbols [expr]
   (distinct-elements symbol? expr))
 
 (defn symbols-no-vars [expr]
-  (distinct-elements #(and (symbol? %) (not (variable? %))) expr))
+  "returns symbols that are not sparql variables from the input expr. This
+   function is used when constructing sparql queries to extract the 
+   symbols whose namespaces must be included in the PREFIX block of
+   the query."
+  (distinct (concat (distinct-elements #(and (symbol? %) (not (variable? %))) expr)
+          ;; If the expr consists of a rule head with a math block then
+          ;; we need to add a symbol with the xsd namespace, e.g. xsd/float
+          ;; to ensure that the xsd namespace appears in the query PREFIX.
+          ;;
+          ;; There can be symbols embedded in strings within math blocks,
+          ;; e.g. calls to functions. These symbols must be extracted so
+          ;; that their namespaces will also appear in the query PREFIX.
+          (if (not (empty? (math-blocks expr)))
+            (cons 'xsd/float  ;; we add xsd/float here to ensure the xsd ns is included
+                  ;; below is a nested map structure. The outer map takes extracted
+                  ;; symbols as strings and replaces ':' with '/' and then creates symbols
+                  (map #(if (string? %) (symbol (clojure.string/replace % #":" "/")))
+                       (keep identity ;; keep identity removes nil from the list
+                             (flatten
+                              ;; The inner map runs a regex over each string component
+                              ;; of the math blocks and extracts all symbols present as
+                              ;; strings
+                              (map (fn [x] (if (string? x) (re-seq #"\b\w+:\w+\b" x)))
+                                   (flatten (seq (math-blocks expr))))))))))))
+
 

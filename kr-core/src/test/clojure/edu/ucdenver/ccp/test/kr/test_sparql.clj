@@ -349,7 +349,9 @@
   (is (= "?a" (sym-to-sparql `?/a)))
   (is (= "_:a" (sym-to-sparql `_/a)))
   (is (= "(COUNT (?a) AS ?a_count)" (sym-to-sparql `[:count ?/a])))
-  (is (= "(COUNT (DISTINCT ?a) AS ?a_count)" (sym-to-sparql `[:count :distinct ?/a]))) 
+  (is (= "(COUNT (DISTINCT ?a) AS ?a_count)" (sym-to-sparql `[:count :distinct ?/a])))
+  (is (= "(xsd:float(?a)/xsd:float(?b) AS ?a_over_b)"
+         (sym-to-sparql `[:float :as ?/a_over_b ?/a "/" ?/b])))
   )
 
 (def head1
@@ -371,6 +373,40 @@
 (deftest replace-count-blocks-test
   (is (= expected-replaced-head (replace-count-blocks head1)))
   (is (= expected-replaced-head (replace-count-blocks head2))))
+
+
+(def head3
+  `((?/super ex/hasDescendentCount [:float :as ?/mid_count ?/a "/" ?/b])
+    (?/a ex/blah ?/b)
+    (?/c ex/blahblah ?/d)))
+
+(def head4
+  `((?/super ex/hasDescendentCount [:float :as ?/d_ratio ?/count "/8"])
+    (?/a ex/blah ?/b)
+    (?/c ex/blahblah ?/d)))
+
+(def expected-replaced-head-4
+  `((?/super ex/hasDescendentCount ?/d_ratio)
+    (?/a ex/blah ?/b)
+    (?/c ex/blahblah ?/d)))
+
+(def head5
+  '((?/jd rdf/type iaohan/JiangDistance)
+    (?/jd obo/RO_0000057 ?/c1) ;; RO:has_participant
+    (?/jd obo/RO_0000057 ?/c2) ;; RO:has_participant
+    (?/jd iaohan/jiang_distance [:float :as ?/jiang_d "-2*ccp_sparql_ext:ln(" ?/pms ") - (ccp_sparql_ext:ln(" ?/p1 ") + ccp_sparql_ext:ln(" ?/p2 "))"])))
+
+(def expected-replaced-head-5
+  `((?/jd rdf/type iaohan/JiangDistance)
+    (?/jd obo/RO_0000057 ?/c1) ;; RO:has_participant
+    (?/jd obo/RO_0000057 ?/c2) ;; RO:has_participant
+    (?/jd iaohan/jiang_distance ?/jiang_d)))
+          
+(deftest replace-math-blocks-test
+  (is (= expected-replaced-head (replace-math-blocks head3)))
+  (is (= expected-replaced-head-4 (replace-math-blocks head4)))
+  (is (= expected-replaced-head-5 (replace-math-blocks head5))))
   
-  
-  
+
+
+

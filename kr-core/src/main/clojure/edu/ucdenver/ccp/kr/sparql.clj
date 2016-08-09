@@ -70,6 +70,26 @@
   (or (find *ns-map-to-long* short)
       (find (and *kb* (ns-map-to-long *kb*)) short)))
 
+(declare sym-to-sparql)
+
+(defn math-to-sparql [s]
+  "Given a math-block, e.g. [:float :as ?/a_over_b ?/a \"/\" ?/b], this 
+   function returns the proper syntax for use in a sparql query, e.g.
+   (xsd:float(?a)/xsd:float(?b) as ?a_over_b)"
+  (let [numtype ((first s)
+                 {:float "xsd:float"
+                  :double "xsd:double"
+                  :decimal "xsd:decimal"
+                  :integer "xsd:integer"})
+        result-var (sym-to-sparql (first (rest (rest  s))))
+        equation (rest (rest (rest s)))]
+    (str "("
+         (apply str (map #(if (symbol? %)
+                            (str numtype "(" (sym-to-sparql %) ")")
+                              %) equation))
+         " AS " result-var ")")
+    ))
+
 (defn sym-to-sparql [s]
   (cond
    (variable? s) (str "?" (name s))
@@ -78,8 +98,9 @@
                           distinct-str (if (> (.indexOf s :distinct) 0)
                                          "DISTINCT " "")]
                       (str "(COUNT (" distinct-str count-var ") AS " count-var "_count)")) 
+   (math-block? s) (math-to-sparql s)
    :else (sparql-uri (sym-to-long-name s))))
-;;:else (str "<" (sym-to-long-name s) ">")))
+
 
 (defn replace-count-blocks [triple-pattern]
   "swaps a count block for its sparql variable,
@@ -88,7 +109,15 @@
                        (let [count-var (first (variables %))]
                          (symbol (str count-var "_count")))
                        %) x)) triple-pattern))
-    
+
+(defn replace-math-blocks [triple-pattern]
+  "swaps a math block for its sparql variable,
+   e.g. replaces [:float :as ?/a_over_b ?/a \"/\" ?/b] with ?/a_over_b.
+   This method assumes that the result variable is the third member
+   of the input vector (of the block)."
+  (map (fn [x] (map #(if (math-block? %)
+          (first (rest (rest %)))
+          %) x)) triple-pattern))
 
 
 (defn sparql-str-lang [s l]
@@ -442,8 +471,16 @@
                       (:select-vars options))
                  (variables triple-pattern))
         non-vars (symbols-no-vars triple-pattern)
-        namespaces (distinct (map namespace non-vars))
+        namespaces (or (and options
+                          (:head-namespaces options)
+                         (distinct (concat (:head-namespaces options)
+                                  (map namespace non-vars))))
+                       (distinct (map namespace non-vars)))
         prefixes (get-prefixes-from-namespaces namespaces)]
+    ;; only add if :prefixes-in-head exists in options 
+    (prn (str "NON_VARS " (pr-str non-vars)))
+    (prn (str "NAMESPACES: " (pr-str namespaces)))
+    (prn (str "PREFIXES: " (pr-str prefixes)))
     (str
      (prefix-block prefixes)
       (apply str "SELECT " *select-type*
