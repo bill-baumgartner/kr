@@ -2,6 +2,7 @@
   (:use clojure.test)
   (require [edu.ucdenver.ccp.kr.variable :refer [count-block?
                                                  math-block?
+                                                 math-blocks 
                                                  symbols-no-vars]]))
 
 (deftest count-block?-test
@@ -10,14 +11,11 @@
   (is (not (count-block? `[:float :as ?/result ?/a "+" ?/b])))
   (is (not (count-block? `[:float :as ?/result ?/count "/8"]))))
   
-
 (deftest math-block?-test
-  (is (math-block? `[:float :as ?/result ?/a "+" ?/b]))
-  (is (math-block? `[:integer :as ?/result ?/a "+" ?/b]))
-  (is (math-block? `[:double :as ?/result ?/a "+" ?/b]))
-  (is (math-block? `[:decimal :as ?/result ?/a "+" ?/b]))
-  (is (not (math-block? `[:imaginary :as ?/result ?/a "+" ?/b])))
-  (is (not (math-block? `[1 :as ?/result ?/a "+" ?/b]))))
+  (is (math-block? `{:num_type :float :as ?/result :eqn [?/a "+" ?/b]}))
+  (is (math-block? `{:num_type :integer :as ?/result :eqn [?/a "+" ?/b]}))
+  (is (not (math-block? `{:as ?/result :eqn [?/a "+" ?/b]}))) ;; missing :num_type
+  (is (not (math-block? `[:float :as ?/result ?/a "+" ?/b]))))
 
 
 (def head-with-count-block
@@ -34,15 +32,36 @@
 (def head-with-math-block
   `((?/jd rdf/type iaohan/JiangDistance)
   (?/jd obo/RO_0000057 ?/c1) ;; RO:has_participant
-  (?/jd obo/RO_0000057 [:float :as ?/something "-2*fake:fn(" ?/p1 ")"]) 
-  (?/jd iaohan/jiang_distance [:float :as ?/jiang_d
-                               "-2*ccp_sparql_ext:ln("
-                               ?/pms
-                               ") - (ccp_sparql_ext:ln("
-                               ?/p1
-                               ") + ccp_sparql_ext:ln("
-                               ?/p2
-                               "))"])))
+    (?/jd obo/RO_0000057 {:num_type :float
+                          :as ?/something
+                          :eqn ["-2*fake:fn(" ?/p1 ")"]}) 
+    (?/jd iaohan/jiang_distance {:num_type :float
+                                 :as ?/jiang_d
+                                 :eqn ["-2*ccp_sparql_ext:ln("
+                                       ?/pms
+                                       ") - (ccp_sparql_ext:ln("
+                                       ?/p1
+                                       ") + ccp_sparql_ext:ln("
+                                       ?/p2
+                                       "))"]})))
+
+(def expected-math-blocks
+  `#{{:num_type :float
+     :as ?/something
+     :eqn ["-2*fake:fn(" ?/p1 ")"]}
+    {:num_type :float
+     :as ?/jiang_d
+     :eqn ["-2*ccp_sparql_ext:ln("
+           ?/pms
+           ") - (ccp_sparql_ext:ln("
+           ?/p1
+           ") + ccp_sparql_ext:ln("
+           ?/p2
+           "))"]}})
+
+
+(deftest math-blocks-extraction-test
+  (is (= expected-math-blocks (math-blocks head-with-math-block))))
 
 (def expected-symbols-from-math-block
   `#{xsd/float fake/fn rdf/type iaohan/JiangDistance obo/RO_0000057 iaohan/jiang_distance ccp_sparql_ext/ln})

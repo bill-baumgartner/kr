@@ -11,11 +11,8 @@
 
 
 (defn math-block? [x]
-  "Is x a math block, e.g. [:math :float ?/a / ?/b]?"
-  (and (vector? x) (or (= :float (first x))
-                       (= :double (first x))
-                       (= :integer (first x))
-                       (= :decimal (first x)))))
+  "A math-block is a map with keys :num_type, :as, :eqn, and optionally :group_by"
+  (and (map? x) (every? x `(:num_type :as :eqn))))
 
 (defn count-block? [x]
   "Is x a count block, e.g. [:count ?/v]?"
@@ -32,9 +29,6 @@
    (variable? v) v
    (symbol? v) (symbol variable-ns (name v))))
    
-   ;; (symbol? v) (symbol (namespace v)
-   ;;                     (str variable-prefix (name v)))))
-
 (defn temp-variable
   ([]       (variable (gensym temp-variable-prefix)))
   ([prefix] (variable (gensym prefix))))
@@ -56,7 +50,7 @@
    (distinct-elements count-block? expr))
 
 (defn math-blocks [expr]
-  "return any math-blocks, e.g. [:math :float ?/a / ?/b] from the input"
+  "return any math-blocks, e.g. {:num_type :float :as ?/sum :eqn [?/a / ?/b]} from the input"
    (distinct-elements math-block? expr))
 
 (defn symbols [expr]
@@ -83,9 +77,9 @@
                        (keep identity ;; keep identity removes nil from the list
                              (flatten
                               ;; The inner map runs a regex over each string component
-                              ;; of the math blocks and extracts all symbols present as
-                              ;; strings
+                              ;; of the math block equations and extracts all symbols
+                              ;; present as strings
                               (map (fn [x] (if (string? x) (re-seq #"\b\w+:\w+\b" x)))
-                                   (flatten (seq (math-blocks expr))))))))))))
+                                   (flatten (map :eqn (math-blocks expr))))))))))))
 
 

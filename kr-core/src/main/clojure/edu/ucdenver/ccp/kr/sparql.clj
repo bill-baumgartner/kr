@@ -73,16 +73,16 @@
 (declare sym-to-sparql)
 
 (defn math-to-sparql [s]
-  "Given a math-block, e.g. [:float :as ?/a_over_b ?/a \"/\" ?/b], this 
+  "Given a math-block, e.g. {:num_type :float :as ?/a_over_b :eqn [?/a \"/\" ?/b]}, this 
    function returns the proper syntax for use in a sparql query, e.g.
    (xsd:float(?a)/xsd:float(?b) as ?a_over_b)"
-  (let [numtype ((first s)
+  (let [numtype ((:num_type s)
                  {:float "xsd:float"
                   :double "xsd:double"
                   :decimal "xsd:decimal"
                   :integer "xsd:integer"})
-        result-var (sym-to-sparql (first (rest (rest  s))))
-        equation (rest (rest (rest s)))]
+        result-var (sym-to-sparql (:as s))
+        equation (flatten (:eqn s))]
     (str "("
          (apply str (map #(if (symbol? %)
                             (str numtype "(" (sym-to-sparql %) ")")
@@ -111,14 +111,16 @@
                        %) x)) triple-pattern))
 
 (defn replace-math-blocks [triple-pattern]
-  "swaps a math block for its sparql variable,
-   e.g. replaces [:float :as ?/a_over_b ?/a \"/\" ?/b] with ?/a_over_b.
-   This method assumes that the result variable is the third member
-   of the input vector (of the block)."
+  "swaps a math block for its sparql variable as defined using the :as keyword,
+   e.g. replaces {:num_type :float :as ?/a_over_b :eqn [?/a \"/\" ?/b]} with ?/a_over_b."
   (map (fn [x] (map #(if (math-block? %)
-          (first (rest (rest %)))
-          %) x)) triple-pattern))
+                       (:as %) %)
+                    x)) triple-pattern))
+;;  (map (fn [x] (flatten (map #(if (math-block? %)
+;;                    (keep identity (flatten (list (:as %) (if (contains? % :group_by) (:group_by %))))) %)
+;;                    x))) triple-pattern))
 
+  
 
 (defn sparql-str-lang [s l]
   (str (pr-str s) "@" l))
@@ -492,6 +494,12 @@
         (str "\nGROUP BY " (apply str (interleave
                                        (map sym-to-sparql
                                             (filter #(not (count-block? %)) vars))
+                                       (repeat " "))))
+        "")
+      (if (some #(contains? % :group_by) (math-blocks vars))
+        (str "\nGROUP BY " (apply str (interleave
+                                       (map sym-to-sparql
+                                            (flatten (map :group_by (math-blocks vars))))
                                        (repeat " "))))
         "")
      )))
