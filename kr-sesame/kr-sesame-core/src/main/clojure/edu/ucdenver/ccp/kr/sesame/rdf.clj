@@ -90,7 +90,7 @@
 
 (defn sesame-create-literal 
   ([kb l]
-   (prn (str "SESAME_CREATE_LITERAL: L= " l))
+   (prn (str "SESAME_CREATE_LITERAL: L= " l " TYPE: " (type l)))
      (.createLiteral (:value-factory kb) l))
   ([kb s type-or-lang]
      ;(println kb s type-or-lang)
