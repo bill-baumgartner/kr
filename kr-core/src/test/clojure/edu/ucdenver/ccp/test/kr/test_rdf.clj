@@ -12,7 +12,8 @@
        )
   (import ;java.io.InputStream
           java.net.URI
-          java.io.ByteArrayInputStream)
+          java.io.ByteArrayInputStream
+          java.math.BigDecimal)
   )
 
 ;;; --------------------------------------------------------
@@ -335,7 +336,16 @@
 
 )
 
-
+;; This test should really be specific to the Sesame
+;; implementation. Note that there is no (is ...) block in this test
+;; as we are testing the fact that an IllegalArgumentException is not
+;; thrown. Sesame org.openrdf.model.impl.ValueFactoryImpl does not
+;; have a method for createLiteral(BigDecimal). To get around this
+;; missing method, all BigDecimal values are converted to double (in
+;; the Sesame implementation only) prior to RDF literal creation. Note
+;; that there is potential for loss in precision with this "fix".
+(kb-test test-create-literal nil
+      (create-literal *kb* (BigDecimal. 0.633)))
 
 
 

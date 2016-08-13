@@ -22,7 +22,8 @@
    org.openrdf.repository.http.HTTPRepository
    org.openrdf.repository.RepositoryConnection
    org.openrdf.query.resultio.TupleQueryResultFormat
-   org.openrdf.rio.RDFFormat))
+   org.openrdf.rio.RDFFormat
+   java.math.BigDecimal))
 
 ;;; --------------------------------------------------------
 ;;; specials
@@ -88,10 +89,23 @@
   [kb id] 
   (.createBNode (:value-factory kb) id))
 
-(defn sesame-create-literal 
+(defn sesame-create-literal
+  "Creates an RDF literal from the specified input. Note that the
+  Sesame org.openrdf.model.impl.ValueFactoryImpl does not have a
+  method for createLiteral(BigDecimal). Because this can cause an
+  IllegalArgumentException, any BigDecimalinput is converted to double
+  prior to RDF literal creation. Note that this has the potential to
+  result in loss of precision."
   ([kb l]
-   (prn (str "SESAME_CREATE_LITERAL: L= " l " TYPE: " (type l)))
-     (.createLiteral (:value-factory kb) l))
+   ;; org.openrdf.model.impl.ValueFactoryImpl does not have a method for
+   ;; createLiteral(BigDecimal) so there is potential for an exception
+   ;; here: "java.lang.IllegalArgumentException: No matching method
+   ;; found: createLiteral for class
+   ;; org.openrdf.model.impl.ValueFactoryImpl". Note, this fix has the
+   ;; potential to result in loss of precision.
+   (if (instance? BigDecimal l)
+     (.createLiteral (:value-factory kb) (.doubleValue l))
+     (.createLiteral (:value-factory kb) l)))
   ([kb s type-or-lang]
      ;(println kb s type-or-lang)
      (.createLiteral (:value-factory kb)
