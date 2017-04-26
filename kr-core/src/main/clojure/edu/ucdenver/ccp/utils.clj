@@ -116,10 +116,21 @@
            (classpath))))
 
 
-(defn classpath-matching [path-part]
-  (remove (fn [file]
-            (not (.contains (str file) path-part)))
-          (classpath-seq)))
+(defn classpath-matching
+  ([path-part]
+   "Filters all members of the classpath by retaining only those that
+  match path-part."
+   (remove (fn [file]
+             (not (.contains (str file) path-part)))
+           (classpath-seq)))
+  ([path-part suffix]
+   "Filters all members of the classpath by retaining only those that
+  match path-part. The results are further filtered by requiring the
+  suffix on all returned paths to match the specified suffix
+  parameter."
+   (remove (fn [file]
+             (not (.endsWith (str file) suffix)))
+           (classpath-matching path-part))))
 
 
 (defn resource-reader [resource-name]
