@@ -59,10 +59,12 @@
 
 ;;loads from all the files that match the pattern
 (defn load-rules-from-classpath [pattern]
-  ;;(mapcat read-all-input
   (mapcat all-input
           (remove directory?
-                  (classpath-matching pattern))))
+                  ;; rules are stored in .clj files, so the .clj suffix
+                  ;; is specified as a requirement in the
+                  ;; classpath-matching function
+                  (classpath-matching pattern ".clj"))))
 
   
 
