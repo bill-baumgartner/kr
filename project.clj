@@ -17,6 +17,7 @@
            [org.slf4j/slf4j-log4j12 "1.7.2"]
            [junit/junit "3.8.1"]]
   :main nil
+  :source-paths ["src" "test"] ;; figure out how to make a test-jar using a profile
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
 
