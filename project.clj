@@ -7,6 +7,7 @@
            [org.clojure/java.classpath "0.1.0"]
            [org.openrdf.sesame/sesame-runtime "2.6.10"]
            ;[org.openrdf.sesame/sesame-queryresultio "2.6.10"]
+           [org.openrdf.sesame/sesame-repository-api "2.6.10"]
            [org.openrdf.sesame/sesame-queryresultio-sparqlxml "2.6.10"]
            [org.openrdf.sesame/sesame-queryresultio-binary "2.6.10"]
            [org.apache.jena/jena-arq "2.10.1"]
