@@ -1,5 +1,5 @@
 
-(ns kr.sesame.rdf
+(ns kr.rdf4j.rdf
   (use kr.core.variable
        kr.core.kb
        kr.core.clj-ify
@@ -27,16 +27,16 @@
 ;; helpers
 ;; ---------------------------------------------------------------------------
 
-(defn sesame-iteration-seq [results]
+(defn rdf4j-iteration-seq [results]
   (lazy-seq
     (when (.hasNext results)
       (cons
         (.next results)
-        (sesame-iteration-seq results)))))
+        (rdf4j-iteration-seq results)))))
 
 
 ;; --------------------------------------------------------
-;; sesame specific connection
+;; rdf4j specific connection
 ;; --------------------------------------------------------
 
 (defn connection! [kb]
@@ -46,40 +46,40 @@
 ;; namespaces
 ;; --------------------------------------------------------
 
-(defn sesame-register-ns [kb short long]
+(defn rdf4j-register-ns [kb short long]
   (.setNamespace (connection! kb) short long))
 
 ;;TODO? use clj-ify under the hood?
-(defn sesame-server-ns-map [kb]
+(defn rdf4j-server-ns-map [kb]
   (reduce (fn [m ns]
             (assoc m (.getPrefix ns) (.getName ns)))
           {}
           (doall
-            (sesame-iteration-seq
+            (rdf4j-iteration-seq
               (.getNamespaces (connection! kb))))))
 
 ;; --------------------------------------------------------
-;; sesame-ify
+;; rdf4j-ify
 ;; --------------------------------------------------------
 
-(defn sesame-uri [uri-string]
+(defn rdf4j-uri [uri-string]
   (URIImpl. uri-string))
 ;;maybe this shoudl be
 ;;  (.createURI (kb :value-factory) uri-string))
 
-(defn sesame-create-resource
+(defn rdf4j-create-resource
   [kb r]
-  ^Resource (sesame-uri r))
+  ^Resource (rdf4j-uri r))
 
-(defn sesame-create-property
+(defn rdf4j-create-property
   [kb p]
-  (sesame-uri p))
+  (rdf4j-uri p))
 
-(defn sesame-create-blank-node
+(defn rdf4j-create-blank-node
   [kb id]
   (.createBNode (:value-factory kb) id))
 
-(defn sesame-create-literal
+(defn rdf4j-create-literal
   ([kb l]
    (.createLiteral (:value-factory kb) l))
   ([kb s type-or-lang]
@@ -90,18 +90,18 @@
                      (kr.core.rdf/resource kb type-or-lang)))))
 
 
-(defn sesame-create-statement
+(defn rdf4j-create-statement
   [kb s p o]
   (StatementImpl. s p o))
 
-(defn sesame-context-array
+(defn rdf4j-context-array
   ([] (make-array Resource 0))
   ([kb c] (if c
             (let [a (make-array Resource 1)]
               (aset a 0 ^Resource (kr.core.rdf/resource kb c))
-              ;;(sesame-uri (resource-ify c)))
+              ;;(rdf4j-uri (resource-ify c)))
               a)
-            (sesame-context-array)))
+            (rdf4j-context-array)))
   ([kb c & rest] (let [a (make-array Resource (+ 1 (count rest)))]
                    (map (fn [v i]
                           (aset a i (kr.core.rdf/resource kb v)))
@@ -174,7 +174,7 @@
 (defn literal-type-or-language [kb literal]
   (let [data-type (.getDatatype literal)]
     (cond (= (str data-type) rdf:langString) (literal-language literal)
-          ;; In an apparent chanage between Sesame 2 and Sesame 4, an IRI is
+          ;; In an apparent change between Sesame 2 and Sesame 4, an IRI is
           ;; now returned as the type for string literals.  Honouring this
           ;; seems like the right thing to do, but to preserve backwards
           ;; compatibility, we continue to return 'nil' as the type for
@@ -224,86 +224,86 @@
 
 (defmethod clj-ify org.eclipse.rdf4j.repository.RepositoryResult [kb results]
   (map (partial clj-ify kb)
-       (sesame-iteration-seq results)))
+       (rdf4j-iteration-seq results)))
 
 ;; --------------------------------------------------------
 ;; adding
 ;; --------------------------------------------------------
 
-(defn sesame-add-statement
+(defn rdf4j-add-statement
   ([kb stmt] (.add (connection! kb)
                    ^Statment stmt
-                   (sesame-context-array))) ;;(make-array Resource 0)))
+                   (rdf4j-context-array))) ;;(make-array Resource 0)))
   ([kb stmt context] (.add (connection! kb)
                            ^Statement stmt
-                           (sesame-context-array kb context)))
+                           (rdf4j-context-array kb context)))
   ([kb s p o] (.add (connection! kb)
                     ^Statement (statement kb s p o)
-                    (sesame-context-array)))
+                    (rdf4j-context-array)))
   ([kb s p o context] (.add (connection! kb)
                             ^Statement (statement kb s p o)
                             ;;^Resource s p o 
-                            (sesame-context-array kb context))))
+                            (rdf4j-context-array kb context))))
 
-(defn sesame-add-statements
+(defn rdf4j-add-statements
   ([kb stmts] (.add (connection! kb)
                     ^Iterable (map (fn [s]
                                      (apply statement kb s))
                                    stmts)
-                    (sesame-context-array)))
+                    (rdf4j-context-array)))
   ([kb stmts context] (.add (connection! kb)
                             ^Iterable (map (fn [s]
                                              (apply statement kb s))
                                            stmts)
-                            (sesame-context-array kb context))))
+                            (rdf4j-context-array kb context))))
 
-(defmulti convert-to-sesame-type identity)
-(defmethod convert-to-sesame-type :n3 [sym] RDFFormat/N3)
-(defmethod convert-to-sesame-type :ntriple [sym] RDFFormat/NTRIPLES)
-(defmethod convert-to-sesame-type :rdfxml [sym] RDFFormat/RDFXML)
-(defmethod convert-to-sesame-type :trig [sym] RDFFormat/TRIG)
-(defmethod convert-to-sesame-type :trix [sym] RDFFormat/TRIX)
-(defmethod convert-to-sesame-type :turtle [sym] RDFFormat/TURTLE)
+(defmulti convert-to-rdf4j-type identity)
+(defmethod convert-to-rdf4j-type :n3 [sym] RDFFormat/N3)
+(defmethod convert-to-rdf4j-type :ntriple [sym] RDFFormat/NTRIPLES)
+(defmethod convert-to-rdf4j-type :rdfxml [sym] RDFFormat/RDFXML)
+(defmethod convert-to-rdf4j-type :trig [sym] RDFFormat/TRIG)
+(defmethod convert-to-rdf4j-type :trix [sym] RDFFormat/TRIX)
+(defmethod convert-to-rdf4j-type :turtle [sym] RDFFormat/TURTLE)
 
-(defn sesame-load-rdf-file
+(defn rdf4j-load-rdf-file
   ([kb file]
    (.add (connection! kb)
          file
          "" ;nil ;""
          (Rio/getParserFormatForFileName (.getName file))
-         (sesame-context-array kb *graph*)))
+         (rdf4j-context-array kb *graph*)))
   ([kb file type]
    (.add (connection! kb)
          file
          "" ;nil ;""
-         (convert-to-sesame-type type)
-         (sesame-context-array kb *graph*))))
+         (convert-to-rdf4j-type type)
+         (rdf4j-context-array kb *graph*))))
 
-(defn sesame-load-rdf-stream
+(defn rdf4j-load-rdf-stream
   ([kb stream]
    (throw (IOException. "Unknown RDF format type for stream.")))
   ([kb stream type]
    (.add (connection! kb)
          stream
          "" ;nil ;""
-         (convert-to-sesame-type type)
-         (sesame-context-array kb *graph*))))
+         (convert-to-rdf4j-type type)
+         (rdf4j-context-array kb *graph*))))
 
 
 ;; --------------------------------------------------------
 ;; querying
 ;; --------------------------------------------------------
 
-(defn sesame-ask-statement
+(defn rdf4j-ask-statement
   ([kb s p o context]
    (.hasStatement ^RepositoryConnection (connection! kb)
                   ^Resource (and s (kr.core.rdf/resource kb s))
                   ^URI (and p (property kb p))
                   ^Value (and o (object kb o))
                   *use-inference*
-                  (sesame-context-array kb context))))
+                  (rdf4j-context-array kb context))))
 
-(defn sesame-query-statement
+(defn rdf4j-query-statement
   ([kb s p o context]
    (clj-ify kb
             (let [result (.getStatements ^RepositoryConnection (connection! kb)
@@ -311,5 +311,5 @@
                                          ^URI (and p (property kb p))
                                          ^Value (and o (object kb o))
                                          *use-inference*
-                                         (sesame-context-array kb context))]
+                                         (rdf4j-context-array kb context))]
               result))))

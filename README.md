@@ -23,7 +23,7 @@ The primary api functions you're likely to use come from the kr-core apis:
 
 To actually get a KB instance to work with you'll need to make sure the implementation-specific code is loaded:
 ```clj
-(require 'edu.ucdenver.ccp.kr.sesame.kb)
+(require 'edu.ucdenver.ccp.kr.rdf4j.kb)
 ;; OR
 (require 'edu.ucdenver.ccp.kr.jena.kb)
 ```

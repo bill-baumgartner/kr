@@ -84,11 +84,11 @@
 ;;; REPL trace:
 ;;; --------------------------------------------------------
 
-;; user> (use 'kr.examples.sesame-mem-kb)
+;; user> (use 'kr.examples.rdf4j-mem-kb)
 ;; nil
 
 ;; user> (def my-kb (add-namespaces
-;;                   (sesame-memory-test-kb)))
+;;                   (rdf4j-memory-test-kb)))
 ;; #'user/my-kb
 
 ;; user> (add-triples my-kb)

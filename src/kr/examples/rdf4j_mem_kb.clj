@@ -1,15 +1,15 @@
-(ns kr.examples.sesame-mem-kb
+(ns kr.examples.rdf4j-mem-kb
   (use kr.core.kb
        kr.core.rdf
        kr.core.sparql)
-  (require kr.sesame.kb))
+  (require kr.rdf4j.kb))
 
 ;;; --------------------------------------------------------
 ;;; create kb
 ;;; --------------------------------------------------------
 
-(defn sesame-memory-test-kb []
-  (open (kb :sesame-mem)))
+(defn rdf4j-memory-test-kb []
+  (open (kb :rdf4j-mem)))
 
 
 (defn add-namespaces [kb]
@@ -85,11 +85,11 @@
 ;;; REPL trace:
 ;;; --------------------------------------------------------
 
-;; user> (use 'kr.examples.sesame-mem-kb)
+;; user> (use 'kr.examples.rdf4j-mem-kb)
 ;; nil
 
 ;; user> (def my-kb (add-namespaces
-;;                   (sesame-memory-test-kb)))
+;;                   (rdf4j-memory-test-kb)))
 ;; #'user/my-kb
 
 ;; user> (add-triples my-kb)

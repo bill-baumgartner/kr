@@ -1,10 +1,10 @@
-(ns kr.sesame.sparql
+(ns kr.rdf4j.sparql
   (use kr.core.variable
        kr.core.kb
        kr.core.clj-ify
        kr.core.rdf
        kr.core.sparql
-       kr.sesame.rdf)
+       kr.rdf4j.rdf)
   (:import [org.eclipse.rdf4j.model.impl StatementImpl URIImpl]
            [org.eclipse.rdf4j.repository Repository RepositoryConnection]
            [org.eclipse.rdf4j.repository.http HTTPRepository HTTPTupleQuery HTTPBooleanQuery]
@@ -48,7 +48,7 @@
 ;;; --------------------------------------------------------
 
 (defn count-results [results]
-  (count (sesame-iteration-seq results)))
+  (count (rdf4j-iteration-seq results)))
 
 (defn clj-ify-bindings [kb bindings]
   (reduce (fn [results binding]
@@ -85,11 +85,11 @@
 ;;; --------------------------------------------------------
 
 (defmethod clj-ify org.eclipse.rdf4j.query.TupleQueryResult [kb results]
-  (result-map kb (sesame-iteration-seq results)))
+  (result-map kb (rdf4j-iteration-seq results)))
 
 
 (defmethod clj-ify org.eclipse.rdf4j.query.GraphQueryResult [kb results]
-  (let [r (doall (map (partial clj-ify kb) (sesame-iteration-seq results)))]
+  (let [r (doall (map (partial clj-ify kb) (rdf4j-iteration-seq results)))]
     (.close results)
     r))
 
@@ -99,13 +99,13 @@
 ;;; --------------------------------------------------------
 
 ;;this returns a boolean
-(defn sesame-ask-sparql [kb query-string]
+(defn rdf4j-ask-sparql [kb query-string]
   (.evaluate ^BooleanQuery
              (.prepareBooleanQuery ^RepositoryConnection (connection! kb)
                                    QueryLanguage/SPARQL
                                    query-string)))
 
-(defn sesame-query-sparql [kb query-string]
+(defn rdf4j-query-sparql [kb query-string]
   (prn query-string)
   (let [tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
@@ -114,7 +114,7 @@
     (clj-ify kb (.evaluate ^TupleQuery tuplequery))))
 
 
-(defn sesame-visit-sparql [kb visitor query-string]
+(defn rdf4j-visit-sparql [kb visitor query-string]
   (let [tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
@@ -124,7 +124,7 @@
                  (handleSolution [bindings]
                    (visitor (clj-ify-bindings kb bindings)))))))
 
-(defn sesame-visit-count-sparql [kb query-string]
+(defn rdf4j-visit-count-sparql [kb query-string]
   (let [count (atom 0)
         tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
@@ -138,21 +138,21 @@
 
 
 
-(defn sesame-count-sparql [kb query-string]
-  (sesame-visit-count-sparql kb query-string))
+(defn rdf4j-count-sparql [kb query-string]
+  (rdf4j-visit-count-sparql kb query-string))
 
-(defn sesame-count-1-1 [kb pattern options]
+(defn rdf4j-count-1-1 [kb pattern options]
   ;;TODO this is rediculous, really? there's nothing better?
   ;;     why is the number a raw string? (is this true of all stores?)
   ;;(read-string
   (second
     (first
       (first
-        (sesame-query-sparql kb
+        (rdf4j-query-sparql kb
                              (sparql-1-1-count-query pattern options))))));)
 
 
-(defn sesame-construct-sparql [kb sparql-string]
+(defn rdf4j-construct-sparql [kb sparql-string]
   ;(prn query-string)
   (let [graphquery (.prepareGraphQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
@@ -162,7 +162,7 @@
 ;;(.evaluate ^GraphQuery graphquery)))
 
 
-(defn sesame-construct-visit-sparql [kb visitor sparql-string]
+(defn rdf4j-construct-visit-sparql [kb visitor sparql-string]
   (let [graphquery (.prepareGraphQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        sparql-string)]
@@ -176,31 +176,31 @@
 
 
 ;;this returns a boolean
-(defn ^boolean sesame-ask-pattern [kb pattern & [options]]
-  (sesame-ask-sparql kb (sparql-ask-query pattern options)))
+(defn ^boolean rdf4j-ask-pattern [kb pattern & [options]]
+  (rdf4j-ask-sparql kb (sparql-ask-query pattern options)))
 
-(defn sesame-query-pattern [kb pattern & [options]]
-  (sesame-query-sparql kb (sparql-select-query pattern options)))
+(defn rdf4j-query-pattern [kb pattern & [options]]
+  (rdf4j-query-sparql kb (sparql-select-query pattern options)))
 
-(defn sesame-count-pattern [kb pattern & [options]]
+(defn rdf4j-count-pattern [kb pattern & [options]]
   ;;check if 1.1 support is available and if so try that way
   (if (has-feature? kb sparql-1-1) ;use fast 1.1 query
-    (sesame-count-1-1 kb pattern options)
+    (rdf4j-count-1-1 kb pattern options)
     ;;otherwise turn and burn
-    (sesame-count-sparql kb (sparql-select-query pattern options))))
+    (rdf4j-count-sparql kb (sparql-select-query pattern options))))
 
-(defn sesame-visit-pattern [kb visitor pattern & [options]]
-  (sesame-visit-sparql kb visitor (sparql-select-query pattern options)))
+(defn rdf4j-visit-pattern [kb visitor pattern & [options]]
+  (rdf4j-visit-sparql kb visitor (sparql-select-query pattern options)))
 
-(defn sesame-construct-pattern [kb create-pattern pattern & [options]]
-  (sesame-construct-sparql kb
+(defn rdf4j-construct-pattern [kb create-pattern pattern & [options]]
+  (rdf4j-construct-sparql kb
                            (sparql-construct-query create-pattern
                                                    pattern
                                                    options)))
 
-(defn sesame-construct-visit-pattern [kb visitor create-pattern pattern
+(defn rdf4j-construct-visit-pattern [kb visitor create-pattern pattern
                                       & [options]]
-  (sesame-construct-visit-sparql kb
+  (rdf4j-construct-visit-sparql kb
                                  visitor
                                  (sparql-construct-query create-pattern
                                                          pattern

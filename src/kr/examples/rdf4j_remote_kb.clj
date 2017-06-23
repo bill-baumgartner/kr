@@ -1,17 +1,17 @@
-(ns kr.examples.sesame-remote-kb
+(ns kr.examples.rdf4j-remote-kb
   (use kr.core.kb
        kr.core.rdf
        kr.core.sparql)
-  (require kr.sesame.kb)
+  (require kr.rdf4j.kb)
   (import org.eclipse.rdf4j.repository.http.HTTPRepository))
 
 ;;; --------------------------------------------------------
 ;;; create kb
 ;;; --------------------------------------------------------
 
-(defn sesame-remote-test-kb []
+(defn rdf4j-remote-test-kb []
   (open
-   (kr.sesame.kb/new-sesame-server
+   (kr.rdf4j.kb/new-rdf4j-server
     :server "http://dbpedia.org/sparql"
     :repo-name "")))
 
@@ -52,10 +52,10 @@
 ;;; REPL trace:
 ;;; --------------------------------------------------------
 
-;; user> (use 'kr.examples.sesame-remote-kb)
+;; user> (use 'kr.examples.rdf4j-remote-kb)
 ;; nil
 
-;; user> (def a-kb (add-namespaces (sesame-remote-test-kb)))
+;; user> (def a-kb (add-namespaces (rdf4j-remote-test-kb)))
 ;; #'user/a-kb
 
 ;; user> (count-ski a-kb)
@@ -79,7 +79,7 @@
 ;; user> (use 'kr.core.kb)
 ;; nil
 ;; user> (close a-kb)
-;; #kr.sesame.kb.SesameKB{:server #<HTTPRepository org.eclipse.rdf4j.repository.http.HTTPRepository@f4c7f77>, :connection nil, :kb-features (:sparql-1-0 :sparql-1-1), :ns-map-to-long {"dbpedia" "http://dbpedia.org/resource/", "dbpedia-owl" "http://dbpedia.org/ontology/", "foaf" "http://xmlns.com/foaf/0.1/", "owl" "http://www.w3.org/2002/07/owl#", "rdfs" "http://www.w3.org/2000/01/rdf-schema#", "rdf" "http://www.w3.org/1999/02/22-rdf-syntax-ns#", "ex" "http://www.example.org/"}, :ns-map-to-short {"http://dbpedia.org/resource/" "dbpedia", "http://dbpedia.org/ontology/" "dbpedia-owl", "http://xmlns.com/foaf/0.1/" "foaf", "http://www.w3.org/2002/07/owl#" "owl", "http://www.w3.org/2000/01/rdf-schema#" "rdfs", "http://www.w3.org/1999/02/22-rdf-syntax-ns#" "rdf", "http://www.example.org/" "ex"}, :value-factory #<ValueFactoryImpl org.eclipse.rdf4j.model.impl.ValueFactoryImpl@67446579>}
+;; #kr.rdf4j.kb.Rdf4jKB{:server #<HTTPRepository org.eclipse.rdf4j.repository.http.HTTPRepository@f4c7f77>, :connection nil, :kb-features (:sparql-1-0 :sparql-1-1), :ns-map-to-long {"dbpedia" "http://dbpedia.org/resource/", "dbpedia-owl" "http://dbpedia.org/ontology/", "foaf" "http://xmlns.com/foaf/0.1/", "owl" "http://www.w3.org/2002/07/owl#", "rdfs" "http://www.w3.org/2000/01/rdf-schema#", "rdf" "http://www.w3.org/1999/02/22-rdf-syntax-ns#", "ex" "http://www.example.org/"}, :ns-map-to-short {"http://dbpedia.org/resource/" "dbpedia", "http://dbpedia.org/ontology/" "dbpedia-owl", "http://xmlns.com/foaf/0.1/" "foaf", "http://www.w3.org/2002/07/owl#" "owl", "http://www.w3.org/2000/01/rdf-schema#" "rdfs", "http://www.w3.org/1999/02/22-rdf-syntax-ns#" "rdf", "http://www.example.org/" "ex"}, :value-factory #<ValueFactoryImpl org.eclipse.rdf4j.model.impl.ValueFactoryImpl@67446579>}
 
 
 ;;; --------------------------------------------------------

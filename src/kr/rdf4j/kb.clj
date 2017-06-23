@@ -1,9 +1,9 @@
-(ns kr.sesame.kb
+(ns kr.rdf4j.kb
   (use kr.core.kb
        kr.core.rdf
        kr.core.sparql
-       kr.sesame.rdf
-       kr.sesame.sparql
+       kr.rdf4j.rdf
+       kr.rdf4j.sparql
        )
   (import
     org.eclipse.rdf4j.model.URI
@@ -47,15 +47,15 @@
 
 ;;this is nonsese becasue to the circular defintions
 ;;  and what can and cannot be forward delcared
-(declare sesame-initialize
-         new-sesame-connection
-         close-existing-sesame-connection)
+(declare rdf4j-initialize
+         new-rdf4j-connection
+         close-existing-rdf4j-connection)
 
-(defn sesame-connection [kb]
-  (new-sesame-connection kb))
+(defn rdf4j-connection [kb]
+  (new-rdf4j-connection kb))
 
-(defn close-sesame-connection [kb]
-  (close-existing-sesame-connection kb))
+(defn close-rdf4j-connection [kb]
+  (close-existing-rdf4j-connection kb))
 
 
 ;;; --------------------------------------------------------
@@ -68,107 +68,107 @@
 
 ;;TODO seperate server and connection??
 
-(defrecord SesameKB [server connection kb-features]
+(defrecord Rdf4jKB [server connection kb-features]
   KB
 
   (native [kb] server)
-  (initialize [kb] (sesame-initialize kb))
-  (open [kb] (new-sesame-connection kb))
-  (close [kb] (close-sesame-connection kb))
+  (initialize [kb] (rdf4j-initialize kb))
+  (open [kb] (new-rdf4j-connection kb))
+  (close [kb] (close-rdf4j-connection kb))
   (features [kb] kb-features)
 
   rdfKB
 
-  (root-ns-map [kb] (sesame-server-ns-map kb))
+  (root-ns-map [kb] (rdf4j-server-ns-map kb))
   ;; (ns-maps [kb] ns-maps-var)
   ;; (ns-map-to-short [kb] (:ns-map-to-short (deref ns-maps-var)))
   ;; (ns-map-to-long [kb] (:ns-map-to-long (deref ns-maps-var)))
-  (register-ns [kb short long] (sesame-register-ns kb short long))
+  (register-ns [kb short long] (rdf4j-register-ns kb short long))
 
-  (create-resource [kb name] (sesame-create-resource kb name))
-  (create-property [kb name] (sesame-create-property kb name))
-  (create-literal [kb val] (sesame-create-literal kb val))
-  (create-literal [kb val type] (sesame-create-literal kb val type))
+  (create-resource [kb name] (rdf4j-create-resource kb name))
+  (create-property [kb name] (rdf4j-create-property kb name))
+  (create-literal [kb val] (rdf4j-create-literal kb val))
+  (create-literal [kb val type] (rdf4j-create-literal kb val type))
 
   ;;TODO convert to creating proper string literals
-  ;; (create-string-literal [kb str] (sesame-create-string-iteral kb val))
+  ;; (create-string-literal [kb str] (rdf4j-create-string-iteral kb val))
   ;; (create-string-literal [kb str lang] 
-  ;;                        (sesame-create-string literal kb val type))
-  (create-string-literal [kb str] (sesame-create-literal kb str))
+  ;;                        (rdf4j-create-string literal kb val type))
+  (create-string-literal [kb str] (rdf4j-create-literal kb str))
   (create-string-literal [kb str lang]
-    (sesame-create-literal kb str lang))
+    (rdf4j-create-literal kb str lang))
 
 
-  (create-blank-node [kb name] (sesame-create-blank-node kb name))
-  (create-statement [kb s p o] (sesame-create-statement kb s p o))
+  (create-blank-node [kb name] (rdf4j-create-blank-node kb name))
+  (create-statement [kb s p o] (rdf4j-create-statement kb s p o))
 
-  (add-statement [kb stmt] (sesame-add-statement kb stmt))
-  (add-statement [kb stmt context] (sesame-add-statement kb stmt context))
-  (add-statement [kb s p o] (sesame-add-statement kb s p o))
-  (add-statement [kb s p o context] (sesame-add-statement kb s p o context))
+  (add-statement [kb stmt] (rdf4j-add-statement kb stmt))
+  (add-statement [kb stmt context] (rdf4j-add-statement kb stmt context))
+  (add-statement [kb s p o] (rdf4j-add-statement kb s p o))
+  (add-statement [kb s p o context] (rdf4j-add-statement kb s p o context))
 
-  (add-statements [kb stmts] (sesame-add-statements kb stmts))
-  (add-statements [kb stmts context] (sesame-add-statements kb stmts context))
+  (add-statements [kb stmts] (rdf4j-add-statements kb stmts))
+  (add-statements [kb stmts context] (rdf4j-add-statements kb stmts context))
 
-  (ask-statement  [kb s p o context] (sesame-ask-statement kb s p o context))
-  (query-statement [kb s p o context] (sesame-query-statement kb s p o context))
+  (ask-statement  [kb s p o context] (rdf4j-ask-statement kb s p o context))
+  (query-statement [kb s p o context] (rdf4j-query-statement kb s p o context))
 
 
-  (load-rdf-file [kb file] (sesame-load-rdf-file kb file))
-  (load-rdf-file [kb file type] (sesame-load-rdf-file kb file type))
+  (load-rdf-file [kb file] (rdf4j-load-rdf-file kb file))
+  (load-rdf-file [kb file type] (rdf4j-load-rdf-file kb file type))
 
   ;;the following will throw exception for unknown rdf format
-  (load-rdf-stream [kb stream] (sesame-load-rdf-stream kb stream))
+  (load-rdf-stream [kb stream] (rdf4j-load-rdf-stream kb stream))
 
-  (load-rdf-stream [kb stream type] (sesame-load-rdf-stream kb stream type))
+  (load-rdf-stream [kb stream type] (rdf4j-load-rdf-stream kb stream type))
 
 
 
   sparqlKB
 
   (ask-pattern [kb pattern]
-    (sesame-ask-pattern kb pattern))
+    (rdf4j-ask-pattern kb pattern))
   (ask-pattern [kb pattern options]
-    (sesame-ask-pattern kb pattern options))
+    (rdf4j-ask-pattern kb pattern options))
 
   (query-pattern [kb pattern]
-    (sesame-query-pattern kb pattern))
+    (rdf4j-query-pattern kb pattern))
   (query-pattern [kb pattern options]
-    (sesame-query-pattern kb pattern options))
+    (rdf4j-query-pattern kb pattern options))
 
   (count-pattern [kb pattern]
-    (sesame-count-pattern kb pattern))
+    (rdf4j-count-pattern kb pattern))
   (count-pattern [kb pattern options]
-    (sesame-count-pattern kb pattern options))
+    (rdf4j-count-pattern kb pattern options))
 
   (visit-pattern [kb visitor pattern]
-    (sesame-visit-pattern kb visitor pattern))
+    (rdf4j-visit-pattern kb visitor pattern))
   (visit-pattern [kb visitor pattern options]
-    (sesame-visit-pattern kb visitor pattern options))
+    (rdf4j-visit-pattern kb visitor pattern options))
 
   (construct-pattern [kb create-pattern pattern]
-    (sesame-construct-pattern kb create-pattern pattern))
+    (rdf4j-construct-pattern kb create-pattern pattern))
   (construct-pattern [kb create-pattern pattern options]
-    (sesame-construct-pattern kb create-pattern pattern options))
+    (rdf4j-construct-pattern kb create-pattern pattern options))
   (construct-visit-pattern [kb visitor create-pattern pattern]
-    (sesame-construct-visit-pattern kb visitor create-pattern pattern))
+    (rdf4j-construct-visit-pattern kb visitor create-pattern pattern))
   (construct-visit-pattern [kb visitor create-pattern pattern options]
-    (sesame-construct-visit-pattern kb visitor create-pattern pattern options))
+    (rdf4j-construct-visit-pattern kb visitor create-pattern pattern options))
 
 
   (ask-sparql [kb query-string]
-    (sesame-ask-sparql kb query-string))
+    (rdf4j-ask-sparql kb query-string))
   (query-sparql [kb query-string]
-    (sesame-query-sparql kb query-string))
+    (rdf4j-query-sparql kb query-string))
   (count-sparql [kb query-string]
-    (sesame-count-sparql kb query-string))
+    (rdf4j-count-sparql kb query-string))
   (visit-sparql [kb visitor query-string]
-    (sesame-visit-sparql kb visitor query-string))
+    (rdf4j-visit-sparql kb visitor query-string))
 
   (construct-sparql [kb sparql-string]
-    (sesame-construct-sparql kb sparql-string))
+    (rdf4j-construct-sparql kb sparql-string))
   (construct-visit-sparql [kb visitor sparql-string]
-    (sesame-construct-visit-sparql kb visitor sparql-string))
+    (rdf4j-construct-visit-sparql kb visitor sparql-string))
 
   )
 
@@ -177,31 +177,31 @@
 ;;; "constructors"
 ;;; --------------------------------------------------------
 
-;; the way new SesameKBConnection is being called it isn't preserving
-;;   the additional keys that are added on to the sesame server
+;; the way new Rdf4jKBConnection is being called it isn't preserving
+;;   the additional keys that are added on to the rdf4j server
 ;;   specifically the :value-factory
 
-;; (defn new-sesame-server []
+;; (defn new-rdf4j-server []
 ;;   (let [repository (HTTPRepository. *default-server* *repository-name*)]
 ;;     (.setPreferredTupleQueryResultFormat repository
 ;;                                          TupleQueryResultFormat/SPARQL)
 ;;     (if (and *username* *password*)
 ;;       (.setUsernameAndPassword repository *username* *password*))
-;;     (assoc (SesameKB. repository (initial-ns-mappings) nil)
+;;     (assoc (Rdf4jKB. repository (initial-ns-mappings) nil)
 ;;       :value-factory (.getValueFactory repository))))
 
-(defn copy-sesame-slots [target-kb source-kb]
+(defn copy-rdf4j-slots [target-kb source-kb]
   (copy-rdf-slots (copy-kb-slots target-kb source-kb)
                   source-kb))
 
 
-(defn sesame-kb-helper [repository]
+(defn rdf4j-kb-helper [repository]
   (initialize-ns-mappings
-    (assoc (SesameKB. repository nil *kb-features*)
+    (assoc (Rdf4jKB. repository nil *kb-features*)
       :value-factory (.getValueFactory repository))))
 
 
-;; (defn new-sesame-server [& {:keys [server repo-name username password]
+;; (defn new-rdf4j-server [& {:keys [server repo-name username password]
 ;;                             :or {server *default-server*
 ;;                                  repo-name *repository-name*
 ;;                                  username *username*
@@ -213,10 +213,10 @@
 ;;                                          TupleQueryResultFormat/SPARQL)
 ;;     (if (and username password)
 ;;       (.setUsernameAndPassword repository username password))
-;;     (assoc (SesameKB. repository (initial-ns-mappings) nil)
+;;     (assoc (Rdf4jKB. repository (initial-ns-mappings) nil)
 ;;       :value-factory (.getValueFactory repository))))
 
-(defn new-sesame-server [& {:keys [server repo-name username password]
+(defn new-rdf4j-server [& {:keys [server repo-name username password]
                             :or {server *default-server*
                                  repo-name *repository-name*
                                  username *username*
@@ -229,40 +229,40 @@
                                          TupleQueryResultFormat/SPARQL)
     (if (and username password)
       (.setUsernameAndPassword repository username password))
-    (sesame-kb-helper repository)))
+    (rdf4j-kb-helper repository)))
 
-;; (defn new-sesame-server-helper [server & [repo-name username password]]
-;;   (apply new-sesame-server 
+;; (defn new-rdf4j-server-helper [server & [repo-name username password]]
+;;   (apply new-rdf4j-server
 ;;          (concat [:server server]
 ;;                  (if repo-name [:repo-name repo-name] nil)
 ;;                  (if username [:username username] nil)
 ;;                  (if password [:password password] nil))))
 
 
-(defn new-sesame-connection [kb]
-  (copy-sesame-slots (assoc (SesameKB. (:server kb)
+(defn new-rdf4j-connection [kb]
+  (copy-rdf4j-slots (assoc (Rdf4jKB. (:server kb)
                                        (.getConnection (:server kb))
                                        (features kb))
                        :value-factory (:value-factory kb))
                      kb))
 
-(defn close-existing-sesame-connection [kb]
+(defn close-existing-rdf4j-connection [kb]
   (when (:connection kb)
     (.close (:connection kb)))
-  (copy-sesame-slots (assoc (SesameKB. (:server kb) nil (features kb))
+  (copy-rdf4j-slots (assoc (Rdf4jKB. (:server kb) nil (features kb))
                        :value-factory (:value-factory kb))
                      kb))
 
 (defmethod kb org.eclipse.rdf4j.repository.http.HTTPRepository [arg]
   (if (class? arg)
-    (new-sesame-server)
-    (sesame-kb-helper arg)))
+    (new-rdf4j-server)
+    (rdf4j-kb-helper arg)))
 
 
 (defmethod kb org.eclipse.rdf4j.repository.Repository [arg]
   (if (class? arg)
-    (new-sesame-server)
-    (sesame-kb-helper arg)))
+    (new-rdf4j-server)
+    (rdf4j-kb-helper arg)))
 
 (defmethod kb org.eclipse.rdf4j.sail.memory.MemoryStore [arg]
   (if (class? arg)
@@ -270,29 +270,29 @@
       ;; (.setPreferredTupleQueryResultFormat repo
       ;;                                      TupleQueryResultFormat/SPARQL)
       (.initialize repo)
-      (sesame-kb-helper repo))
-    (sesame-kb-helper arg)))
+      (rdf4j-kb-helper repo))
+    (rdf4j-kb-helper arg)))
 
-;; need to add more kb constructors in here for taking in various sesame objects
+;; need to add more kb constructors in here for taking in various rdf4j objects
 ;;   repository, sail, etc. instances
 
 
-(defn sesame-initialize [kb]
+(defn rdf4j-initialize [kb]
   (synch-ns-mappings kb))
 
-;; (defn new-sesame-memory-kb []
+;; (defn new-rdf4j-memory-kb []
 ;;   (let [repo (SailRepository. (MemoryStore.))]
 ;;     (.initialize repo)
 ;;     ;(.setPreferredTupleQueryResultFormat repo TupleQueryResultFormat/SPARQL)
-;;     (assoc (SesameKB. repo (initial-ns-mappings) nil)
+;;     (assoc (Rdf4jKB. repo (initial-ns-mappings) nil)
 ;;       :value-factory (.getValueFactory repo))))
 
-(defn new-sesame-memory-kb []
+(defn new-rdf4j-memory-kb []
   (kb org.eclipse.rdf4j.sail.memory.MemoryStore))
 
 
-(defmethod kb :sesame-mem [_]
-  (new-sesame-memory-kb))
+(defmethod kb :rdf4j-mem [_]
+  (new-rdf4j-memory-kb))
 
 
 ;;; --------------------------------------------------------
