@@ -3,6 +3,8 @@
 .settings/
 target/
 
+.idea/
+*.iml
 .lein-failures
 
 pom.xml

@@ -5,39 +5,21 @@
        kr.core.rdf
        kr.core.sparql
        kr.sesame.rdf)
-
-  (import org.openrdf.model.impl.StatementImpl
-          org.openrdf.model.impl.URIImpl
-          
-          org.openrdf.repository.Repository
-          org.openrdf.repository.http.HTTPRepository
-          org.openrdf.repository.http.HTTPTupleQuery
-          org.openrdf.repository.http.HTTPBooleanQuery
-          org.openrdf.repository.RepositoryConnection
-          org.openrdf.query.BooleanQuery
-          org.openrdf.query.TupleQuery
-          org.openrdf.query.GraphQuery
-
-          
-          org.openrdf.query.TupleQueryResult
-          org.openrdf.query.QueryLanguage
-          org.openrdf.query.resultio.TupleQueryResultParserRegistry
-          org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLParserFactory
-          org.openrdf.query.resultio.TupleQueryResultFormat
-          org.openrdf.query.TupleQueryResultHandlerBase
-
-          org.openrdf.rio.helpers.RDFHandlerBase
-
-          ))
-
+  (:import [org.eclipse.rdf4j.model.impl StatementImpl URIImpl]
+           [org.eclipse.rdf4j.repository Repository RepositoryConnection]
+           [org.eclipse.rdf4j.repository.http HTTPRepository HTTPTupleQuery HTTPBooleanQuery]
+           [org.eclipse.rdf4j.query BooleanQuery TupleQuery GraphQuery TupleQueryResult QueryLanguage TupleQueryResultHandlerBase]
+           [org.eclipse.rdf4j.query.resultio TupleQueryResultParserRegistry TupleQueryResultFormat]
+           org.eclipse.rdf4j.query.resultio.sparqlxml.SPARQLResultsXMLParserFactory
+           org.eclipse.rdf4j.rio.helpers.RDFHandlerBase))
 
 (defn count-results
   ([results] (count-results results 0))
   ([results count]
-     (if (.hasNext results)
-       (do (.next results)
-           (recur results (+ 1 count)))
-       count)))
+   (if (.hasNext results)
+     (do (.next results)
+         (recur results (+ 1 count)))
+     count)))
 
 
 ;; (defn results-seq [results]
@@ -46,7 +28,7 @@
 ;;      (cons 
 ;;       (.next results)
 ;;       (results-seq results)))))
-  
+
 ;;TODO? are these even useful?
 
 (defn result-to-map [kb result]
@@ -57,9 +39,9 @@
 
 (defn get-results-for-key [key results]
   (set
-   (map (fn [result]
-          (result key))
-        results)))
+    (map (fn [result]
+           (result key))
+         results)))
 
 ;;; --------------------------------------------------------
 ;;; result processing helpsers
@@ -76,16 +58,16 @@
           {}
           bindings))
 
-(defn result-map [kb results] 
+(defn result-map [kb results]
   (lazy-seq
-   ;(when-let [s (results-seq results)]
-   (when-let [s (seq results)]
-     (cons 
-      (reduce conj {} (map (fn [binding]
-                             (vector (variable (.getName binding))
-                                     (clj-ify kb (.getValue binding))))
-                           (first s)))
-      (result-map kb (rest s))))))
+    ;(when-let [s (results-seq results)]
+    (when-let [s (seq results)]
+      (cons
+        (reduce conj {} (map (fn [binding]
+                               (vector (variable (.getName binding))
+                                       (clj-ify kb (.getValue binding))))
+                             (first s)))
+        (result-map kb (rest s))))))
 
 ;;TODO 
 ;; the above can be made to capture the kb if made like the following
@@ -102,15 +84,15 @@
 ;;; clj-ify
 ;;; --------------------------------------------------------
 
-(defmethod clj-ify org.openrdf.query.TupleQueryResult [kb results]
+(defmethod clj-ify org.eclipse.rdf4j.query.TupleQueryResult [kb results]
   (result-map kb (sesame-iteration-seq results)))
 
 
-(defmethod clj-ify org.openrdf.query.GraphQueryResult [kb results]
+(defmethod clj-ify org.eclipse.rdf4j.query.GraphQueryResult [kb results]
   (let [r (doall (map (partial clj-ify kb) (sesame-iteration-seq results)))]
     (.close results)
     r))
-    
+
 
 ;;; --------------------------------------------------------
 ;;; main queries
@@ -120,11 +102,11 @@
 (defn sesame-ask-sparql [kb query-string]
   (.evaluate ^BooleanQuery
              (.prepareBooleanQuery ^RepositoryConnection (connection! kb)
-                                 QueryLanguage/SPARQL
-                                 query-string)))
+                                   QueryLanguage/SPARQL
+                                   query-string)))
 
 (defn sesame-query-sparql [kb query-string]
-  ;(prn query-string)
+  (prn query-string)
   (let [tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
@@ -163,11 +145,11 @@
   ;;TODO this is rediculous, really? there's nothing better?
   ;;     why is the number a raw string? (is this true of all stores?)
   ;;(read-string
-   (second
+  (second
     (first
-     (first 
-      (sesame-query-sparql kb
-                           (sparql-1-1-count-query pattern options))))));)
+      (first
+        (sesame-query-sparql kb
+                             (sparql-1-1-count-query pattern options))))));)
 
 
 (defn sesame-construct-sparql [kb sparql-string]
@@ -177,7 +159,7 @@
                                        sparql-string)]
     (.setIncludeInferred graphquery *use-inference*)
     (clj-ify kb (.evaluate ^GraphQuery graphquery))))
-    ;;(.evaluate ^GraphQuery graphquery)))
+;;(.evaluate ^GraphQuery graphquery)))
 
 
 (defn sesame-construct-visit-sparql [kb visitor sparql-string]

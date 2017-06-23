@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
            [org.clojure/java.classpath "0.1.0"]
-           [org.openrdf.sesame/sesame-runtime "4.1.2"]
+           [org.eclipse.rdf4j/rdf4j-runtime "2.2.2"]
            [org.apache.jena/jena-arq "2.10.1"]
            [log4j/log4j "1.2.17"]
            [commons-logging/commons-logging "1.1.1"]

@@ -5,23 +5,23 @@
        kr.sesame.rdf
        kr.sesame.sparql
        )
-  (import 
-   org.openrdf.model.URI
-   org.openrdf.model.Resource
-   org.openrdf.model.Statement
-   
-   org.openrdf.model.impl.StatementImpl
-   org.openrdf.model.impl.URIImpl
+  (import
+    org.eclipse.rdf4j.model.URI
+    org.eclipse.rdf4j.model.Resource
+    org.eclipse.rdf4j.model.Statement
 
-   org.openrdf.repository.Repository
-   org.openrdf.repository.http.HTTPRepository
-   org.openrdf.repository.RepositoryConnection
+    org.eclipse.rdf4j.model.impl.StatementImpl
+    org.eclipse.rdf4j.model.impl.URIImpl
 
-   org.openrdf.repository.sail.SailRepository;
-   org.openrdf.sail.memory.MemoryStore;
+    org.eclipse.rdf4j.repository.Repository
+    org.eclipse.rdf4j.repository.http.HTTPRepository
+    org.eclipse.rdf4j.repository.RepositoryConnection
 
-   org.openrdf.query.resultio.TupleQueryResultFormat
-))
+    org.eclipse.rdf4j.repository.sail.SailRepository;
+    org.eclipse.rdf4j.sail.memory.MemoryStore;
+
+    org.eclipse.rdf4j.query.resultio.TupleQueryResultFormat
+    ))
 
 ;;; --------------------------------------------------------
 ;;; specials
@@ -84,7 +84,7 @@
   ;; (ns-map-to-short [kb] (:ns-map-to-short (deref ns-maps-var)))
   ;; (ns-map-to-long [kb] (:ns-map-to-long (deref ns-maps-var)))
   (register-ns [kb short long] (sesame-register-ns kb short long))
-  
+
   (create-resource [kb name] (sesame-create-resource kb name))
   (create-property [kb name] (sesame-create-property kb name))
   (create-literal [kb val] (sesame-create-literal kb val))
@@ -95,8 +95,8 @@
   ;; (create-string-literal [kb str lang] 
   ;;                        (sesame-create-string literal kb val type))
   (create-string-literal [kb str] (sesame-create-literal kb str))
-  (create-string-literal [kb str lang] 
-                         (sesame-create-literal kb str lang))
+  (create-string-literal [kb str lang]
+    (sesame-create-literal kb str lang))
 
 
   (create-blank-node [kb name] (sesame-create-blank-node kb name))
@@ -112,7 +112,7 @@
 
   (ask-statement  [kb s p o context] (sesame-ask-statement kb s p o context))
   (query-statement [kb s p o context] (sesame-query-statement kb s p o context))
-  
+
 
   (load-rdf-file [kb file] (sesame-load-rdf-file kb file))
   (load-rdf-file [kb file type] (sesame-load-rdf-file kb file type))
@@ -126,20 +126,20 @@
 
   sparqlKB
 
-  (ask-pattern [kb pattern] 
-             (sesame-ask-pattern kb pattern))
+  (ask-pattern [kb pattern]
+    (sesame-ask-pattern kb pattern))
   (ask-pattern [kb pattern options]
-             (sesame-ask-pattern kb pattern options))
+    (sesame-ask-pattern kb pattern options))
 
   (query-pattern [kb pattern]
-        (sesame-query-pattern kb pattern))
+    (sesame-query-pattern kb pattern))
   (query-pattern [kb pattern options]
-        (sesame-query-pattern kb pattern options))
+    (sesame-query-pattern kb pattern options))
 
   (count-pattern [kb pattern]
-        (sesame-count-pattern kb pattern))
+    (sesame-count-pattern kb pattern))
   (count-pattern [kb pattern options]
-        (sesame-count-pattern kb pattern options))
+    (sesame-count-pattern kb pattern options))
 
   (visit-pattern [kb visitor pattern]
     (sesame-visit-pattern kb visitor pattern))
@@ -147,26 +147,26 @@
     (sesame-visit-pattern kb visitor pattern options))
 
   (construct-pattern [kb create-pattern pattern]
-        (sesame-construct-pattern kb create-pattern pattern))
+    (sesame-construct-pattern kb create-pattern pattern))
   (construct-pattern [kb create-pattern pattern options]
-        (sesame-construct-pattern kb create-pattern pattern options))
+    (sesame-construct-pattern kb create-pattern pattern options))
   (construct-visit-pattern [kb visitor create-pattern pattern]
     (sesame-construct-visit-pattern kb visitor create-pattern pattern))
   (construct-visit-pattern [kb visitor create-pattern pattern options]
     (sesame-construct-visit-pattern kb visitor create-pattern pattern options))
 
-  
+
   (ask-sparql [kb query-string]
-            (sesame-ask-sparql kb query-string))
+    (sesame-ask-sparql kb query-string))
   (query-sparql [kb query-string]
-        (sesame-query-sparql kb query-string))
+    (sesame-query-sparql kb query-string))
   (count-sparql [kb query-string]
     (sesame-count-sparql kb query-string))
   (visit-sparql [kb visitor query-string]
     (sesame-visit-sparql kb visitor query-string))
 
   (construct-sparql [kb sparql-string]
-        (sesame-construct-sparql kb sparql-string))
+    (sesame-construct-sparql kb sparql-string))
   (construct-visit-sparql [kb visitor sparql-string]
     (sesame-construct-visit-sparql kb visitor sparql-string))
 
@@ -176,7 +176,7 @@
 
 ;;; "constructors"
 ;;; --------------------------------------------------------
-    
+
 ;; the way new SesameKBConnection is being called it isn't preserving
 ;;   the additional keys that are added on to the sesame server
 ;;   specifically the :value-factory
@@ -193,12 +193,12 @@
 (defn copy-sesame-slots [target-kb source-kb]
   (copy-rdf-slots (copy-kb-slots target-kb source-kb)
                   source-kb))
-  
+
 
 (defn sesame-kb-helper [repository]
-  (initialize-ns-mappings 
-   (assoc (SesameKB. repository nil *kb-features*)
-     :value-factory (.getValueFactory repository))))
+  (initialize-ns-mappings
+    (assoc (SesameKB. repository nil *kb-features*)
+      :value-factory (.getValueFactory repository))))
 
 
 ;; (defn new-sesame-server [& {:keys [server repo-name username password]
@@ -223,7 +223,7 @@
                                  password *password*}}]
   ;; (println "server" server  " name" repo-name)
   ;; (println "username" username  " password" password)
-  (let [repository (org.openrdf.repository.http.HTTPRepository. server
+  (let [repository (org.eclipse.rdf4j.repository.http.HTTPRepository. server
                                                                 repo-name)]
     (.setPreferredTupleQueryResultFormat repository
                                          TupleQueryResultFormat/SPARQL)
@@ -253,25 +253,18 @@
                        :value-factory (:value-factory kb))
                      kb))
 
-
-;; (defmethod kb org.openrdf.repository.http.HTTPRepository [class-name]
-;;   (new-sesame-server))
-
-;; (defmethod kb org.openrdf.repository.Repository [class-name]
-;;   (new-sesame-server))
-
-(defmethod kb org.openrdf.repository.http.HTTPRepository [arg]
-  (if (class? arg)
-    (new-sesame-server)
-    (sesame-kb-helper arg)))
-    
-
-(defmethod kb org.openrdf.repository.Repository [arg]
+(defmethod kb org.eclipse.rdf4j.repository.http.HTTPRepository [arg]
   (if (class? arg)
     (new-sesame-server)
     (sesame-kb-helper arg)))
 
-(defmethod kb org.openrdf.sail.memory.MemoryStore [arg]
+
+(defmethod kb org.eclipse.rdf4j.repository.Repository [arg]
+  (if (class? arg)
+    (new-sesame-server)
+    (sesame-kb-helper arg)))
+
+(defmethod kb org.eclipse.rdf4j.sail.memory.MemoryStore [arg]
   (if (class? arg)
     (let [repo (SailRepository. (MemoryStore.))]
       ;; (.setPreferredTupleQueryResultFormat repo
@@ -295,7 +288,7 @@
 ;;       :value-factory (.getValueFactory repo))))
 
 (defn new-sesame-memory-kb []
-  (kb org.openrdf.sail.memory.MemoryStore))
+  (kb org.eclipse.rdf4j.sail.memory.MemoryStore))
 
 
 (defmethod kb :sesame-mem [_]

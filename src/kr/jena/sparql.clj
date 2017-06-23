@@ -16,36 +16,6 @@
                           
 ))
 
-
-;;; --------------------------------------------------------
-;;; result processing helpsers
-;;; --------------------------------------------------------
-
-;; (defn count-results [results]
-;;   (count (jena-iteration-seq results)))
-
-;; (defn result-map [results] 
-;;   (lazy-seq
-;;    ;(when-let [s (results-seq results)]
-;;    (when-let [s (seq results)]
-;;      (cons 
-;;       (reduce conj {} (map (fn [binding]
-;;                              (vector (variable (.getName binding))
-;;                                      (clj-ify (.getValue binding))))
-;;                            (first s)))
-;;       (result-map (rest s))))))
-
-;;; --------------------------------------------------------
-;;; clj-ify
-;;; --------------------------------------------------------
-
-;; (defmethod clj-ify org.openrdf.query.TupleQueryResult [results]
-;;   (result-map (jena-iteration-seq results)))
-
-;; (defmethod clj-ify com.hp.hpl.jena.rdf.model.impl.LiteralImpl [kb l] 
-;;   (.getValue l))
-
-
 ;;; --------------------------------------------------------
 ;;; main query helper
 ;;; --------------------------------------------------------

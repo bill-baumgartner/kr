@@ -8,7 +8,7 @@
   (:import [java.io IOException]
 
     ;; Interfaces
-           [org.openrdf.model Literal Resource Statement URI]
+           [org.eclipse.rdf4j.model Literal Resource Statement URI]
 
     ;; Classes
 
@@ -17,13 +17,11 @@
     ;; consistent interface should be expected.  We should by using the
     ;; interfaces that these implement and the appropriate ValueFactory
     ;; to create instances of these where necessary.
-           [org.openrdf.model.impl StatementImpl URIImpl]
-
-           [org.openrdf.repository Repository RepositoryConnection]
-           org.openrdf.repository.http.HTTPRepository
-           org.openrdf.query.resultio.TupleQueryResultFormat
-           org.openrdf.rio.RDFFormat
-           org.openrdf.rio.Rio))
+           [org.eclipse.rdf4j.model.impl StatementImpl URIImpl]
+           [org.eclipse.rdf4j.repository RepositoryConnection]
+           org.eclipse.rdf4j.repository.http.HTTPRepository
+           org.eclipse.rdf4j.query.resultio.TupleQueryResultFormat
+           [org.eclipse.rdf4j.rio RDFFormat Rio]))
 
 ;; ---------------------------------------------------------------------------
 ;; helpers
@@ -194,7 +192,7 @@
 ;;; clj-ify
 ;;; --------------------------------------------------------
 
-(defmethod clj-ify org.openrdf.model.URI [kb r]
+(defmethod clj-ify org.eclipse.rdf4j.model.URI [kb r]
   (if (or (= "" (.getLocalName r))
           (= "" (.getNamespace r)))
     (convert-string-to-sym kb (.stringValue r))
@@ -203,28 +201,28 @@
                            (.getNamespace r)
                            (.getLocalName r))))
 
-(defmethod clj-ify org.openrdf.model.Resource [kb r]
+(defmethod clj-ify org.eclipse.rdf4j.model.Resource [kb r]
   (convert-string-to-sym kb (.stringValue r)))
 
-(defmethod clj-ify org.openrdf.model.BNode [kb bnode]
+(defmethod clj-ify org.eclipse.rdf4j.model.BNode [kb bnode]
   (symbol *anon-ns-name* (.stringValue bnode)))
 
 ;;need to get numbers back out of literals
-(defmethod clj-ify org.openrdf.model.Literal [kb v]
+(defmethod clj-ify org.eclipse.rdf4j.model.Literal [kb v]
   (literal-to-clj kb v))
 
-(defmethod clj-ify org.openrdf.model.Value [kb v]
+(defmethod clj-ify org.eclipse.rdf4j.model.Value [kb v]
   (.stringValue v))
 
-(prefer-method clj-ify [org.openrdf.model.Literal] [org.openrdf.model.Value])
+(prefer-method clj-ify [org.eclipse.rdf4j.model.Literal] [org.eclipse.rdf4j.model.Value])
 
 
-(defmethod clj-ify org.openrdf.model.Statement [kb s]
+(defmethod clj-ify org.eclipse.rdf4j.model.Statement [kb s]
   (list (clj-ify kb (.getSubject s))
         (clj-ify kb (.getPredicate s))
         (clj-ify kb (.getObject s))))
 
-(defmethod clj-ify org.openrdf.repository.RepositoryResult [kb results]
+(defmethod clj-ify org.eclipse.rdf4j.repository.RepositoryResult [kb results]
   (map (partial clj-ify kb)
        (sesame-iteration-seq results)))
 

@@ -4,14 +4,10 @@
         kr.sesame.kb
         [kr.sesame.rdf :exclude (resource)]
         [clojure.java.io :exclude (resource)])
-  (import  ;;org.openrdf.model.impl.ValueFactoryBase
-           org.openrdf.model.impl.ValueFactoryImpl
+  (:import org.eclipse.rdf4j.model.impl.ValueFactoryImpl
            java.nio.charset.Charset
-           (org.openrdf.rio Rio
-                            RDFFormat
-                            RDFWriter
-                            RDFWriterFactory)
-           org.openrdf.rio.ntriples.NTriplesWriterFactory))
+           [org.eclipse.rdf4j.rio RDFFormat Rio RDFWriter RDFWriterFactory]
+           org.eclipse.rdf4j.rio.ntriples.NTriplesWriterFactory))
 
 ;;; --------------------------------------------------------
 ;;; connections
@@ -114,7 +110,7 @@
 (defn new-sesame-writer-kb [target]
   (initialize-ns-mappings
    (assoc (SesameWriterKB. target nil) ;(initial-ns-mappings) nil)
-     :value-factory (org.openrdf.model.impl.ValueFactoryImpl.))))
+     :value-factory (org.eclipse.rdf4j.model.impl.ValueFactoryImpl.))))
   ;;(.getValueFactory repository)))
 
 

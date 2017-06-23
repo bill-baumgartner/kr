@@ -3,7 +3,7 @@
        kr.core.rdf
        kr.core.sparql)
   (require kr.sesame.kb)
-  (import org.openrdf.repository.http.HTTPRepository))
+  (import org.eclipse.rdf4j.repository.http.HTTPRepository))
 
 ;;; --------------------------------------------------------
 ;;; create kb
@@ -79,7 +79,7 @@
 ;; user> (use 'kr.core.kb)
 ;; nil
 ;; user> (close a-kb)
-;; #kr.sesame.kb.SesameKB{:server #<HTTPRepository org.openrdf.repository.http.HTTPRepository@f4c7f77>, :connection nil, :kb-features (:sparql-1-0 :sparql-1-1), :ns-map-to-long {"dbpedia" "http://dbpedia.org/resource/", "dbpedia-owl" "http://dbpedia.org/ontology/", "foaf" "http://xmlns.com/foaf/0.1/", "owl" "http://www.w3.org/2002/07/owl#", "rdfs" "http://www.w3.org/2000/01/rdf-schema#", "rdf" "http://www.w3.org/1999/02/22-rdf-syntax-ns#", "ex" "http://www.example.org/"}, :ns-map-to-short {"http://dbpedia.org/resource/" "dbpedia", "http://dbpedia.org/ontology/" "dbpedia-owl", "http://xmlns.com/foaf/0.1/" "foaf", "http://www.w3.org/2002/07/owl#" "owl", "http://www.w3.org/2000/01/rdf-schema#" "rdfs", "http://www.w3.org/1999/02/22-rdf-syntax-ns#" "rdf", "http://www.example.org/" "ex"}, :value-factory #<ValueFactoryImpl org.openrdf.model.impl.ValueFactoryImpl@67446579>}
+;; #kr.sesame.kb.SesameKB{:server #<HTTPRepository org.eclipse.rdf4j.repository.http.HTTPRepository@f4c7f77>, :connection nil, :kb-features (:sparql-1-0 :sparql-1-1), :ns-map-to-long {"dbpedia" "http://dbpedia.org/resource/", "dbpedia-owl" "http://dbpedia.org/ontology/", "foaf" "http://xmlns.com/foaf/0.1/", "owl" "http://www.w3.org/2002/07/owl#", "rdfs" "http://www.w3.org/2000/01/rdf-schema#", "rdf" "http://www.w3.org/1999/02/22-rdf-syntax-ns#", "ex" "http://www.example.org/"}, :ns-map-to-short {"http://dbpedia.org/resource/" "dbpedia", "http://dbpedia.org/ontology/" "dbpedia-owl", "http://xmlns.com/foaf/0.1/" "foaf", "http://www.w3.org/2002/07/owl#" "owl", "http://www.w3.org/2000/01/rdf-schema#" "rdfs", "http://www.w3.org/1999/02/22-rdf-syntax-ns#" "rdf", "http://www.example.org/" "ex"}, :value-factory #<ValueFactoryImpl org.eclipse.rdf4j.model.impl.ValueFactoryImpl@67446579>}
 
 
 ;;; --------------------------------------------------------
