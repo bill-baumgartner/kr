@@ -5,14 +5,8 @@
   (require kr.core.test-kb
            kr.jena.rdf))
 
-;;; --------------------------------------------------------
-;;; 
-;;; --------------------------------------------------------
-
 (defn jena-memory-test-kb []
-  ;;(edu.ucdenver.ccp.kr.kb/open
   (kb :jena-mem))
-;;(edu.ucdenver.ccp.kr.jena.kb/new-jena-model-kb));)
 
 (defn test-ns-hook []
   (binding [kr.core.test-kb/*kb-creator-fn*
@@ -20,12 +14,3 @@
             kr.jena.rdf/*force-add-named-to-default*
             true]
     (run-tests 'kr.core.test-kb)))
-
-
-
-;;; --------------------------------------------------------
-;;; END
-;;; --------------------------------------------------------
-
-
-

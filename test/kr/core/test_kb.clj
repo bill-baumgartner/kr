@@ -1,59 +1,49 @@
+
 (ns kr.core.test-kb
   (use clojure.test
        kr.core.variable
        kr.core.kb
        kr.core.rdf
-       kr.core.sparql
-       ))
+       kr.core.sparql))
 
-;;; --------------------------------------------------------
-;;; constansts
-;;; --------------------------------------------------------
+;; --------------------------------------------------------
+;; constants
+;; --------------------------------------------------------
 
 (defonce ^:dynamic *rcon* nil)
 
 (def ^:dynamic *namespaces*
-     '(;;standard namespaces
-       ("rdf" "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
-       ("rdfs" "http://www.w3.org/2000/01/rdf-schema#")
-       ("owl" "http://www.w3.org/2002/07/owl#") 
-       ("xsd" "http://www.w3.org/2001/XMLSchema#")
-       
-       ;;a "regular" namespaces
-       ("ex" "http://www.example.org/") 
-       ("foaf" "http://xmlns.com/foaf/0.1/")
-       ("vcard" "http://www.w3.org/2001/vcard-rdf/3.0#") 
-       ("rss" "http://purl.org/rss/1.0/") 
-       ("daml" "http://www.daml.org/2001/03/daml+oil#")
+  '(;;standard namespaces
+     ("rdf" "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+     ("rdfs" "http://www.w3.org/2000/01/rdf-schema#")
+     ("owl" "http://www.w3.org/2002/07/owl#")
+     ("xsd" "http://www.w3.org/2001/XMLSchema#")
 
-       ("dc" "http://purl.org/dc/elements/1.1/")
-       ("dc10"  "http://purl.org/dc/elements/1.0/")
-       ("dc11"  "http://purl.org/dc/elements/1.1/")
+     ;;a "regular" namespaces
+     ("ex" "http://www.example.org/")
+     ("foaf" "http://xmlns.com/foaf/0.1/")
+     ("vcard" "http://www.w3.org/2001/vcard-rdf/3.0#")
+     ("rss" "http://purl.org/rss/1.0/")
+     ("daml" "http://www.daml.org/2001/03/daml+oil#")
 
-       ("ja" "http://jena.hpl.hp.com/2005/11/Assembler#")
+     ("dc" "http://purl.org/dc/elements/1.1/")
+     ("dc10"  "http://purl.org/dc/elements/1.0/")
+     ("dc11"  "http://purl.org/dc/elements/1.1/")
 
-       ))
+     ("ja" "http://jena.hpl.hp.com/2005/11/Assembler#")))
 
 (def test-triples
-     '((ex/a  foaf/name   "Johnny Lee Outlaw")
-       (ex/a  foaf/mbox   "<mailto:jlow@example.com>")
-       (ex/b  foaf/name   "Peter Goodguy")
-       (ex/b  foaf/mbox   "<mailto:peter@example.org>")
-       (ex/c  foaf/mbox   "<mailto:carol@example.org>")))
+  '((ex/a foaf/name "Johnny Lee Outlaw")
+     (ex/a foaf/mbox "<mailto:jlow@example.com>")
+     (ex/b foaf/name "Peter Goodguy")
+     (ex/b foaf/mbox "<mailto:peter@example.org>")
+     (ex/c foaf/mbox "<mailto:carol@example.org>")))
 
-;;; --------------------------------------------------------
-;;; helpers
-;;; --------------------------------------------------------
+;; --------------------------------------------------------
+;; helpers
+;; --------------------------------------------------------
 
 (def ^:dynamic *kb-creator-fn* nil)
-
-;; (defn register-namespaces [kb]
-;;   (synch-ns-mappings kb)
-;;   (dorun
-;;    (map (fn [[short long]]
-;;           (update-ns-mapping kb short long))
-;;         *namespaces*))
-;;   (synch-ns-mappings kb))
 
 (defn load-test-triples [kb triples]
   (dorun
@@ -66,11 +56,6 @@
            (binding [*kb* kb]
              (load-test-triples kb triples))
            kb)))
-  ;; ([kb-creator triples] (let [kb (kb-creator)]
-  ;;                         (register-namespaces kb *namespaces*)
-  ;;                         (binding [*kb* kb]
-  ;;                           (load-test-triples kb triples))
-  ;;                         kb)))
 
 (defmacro kb-test [name triples & body]
   `(deftest ~name
@@ -78,14 +63,9 @@
        (binding [*kb* (new-test-kb ~triples)]
          ~@body))))
 
-;; (defmacro kb-test [name triples & body]
-;;   `(deftest ~name
-;;      (binding [*kb* (new-test-kb ~triples)]
-;;        ~@body)))
-
-;;; --------------------------------------------------------
-;;; kb tests
-;;; --------------------------------------------------------
+;; --------------------------------------------------------
+;; kb tests
+;; --------------------------------------------------------
 
 (kb-test test-kb-up nil
          (is *kb*))
@@ -111,7 +91,3 @@
          (let [kb (add-feature *kb* :foo)]
            (with-new-connection kb conn
              (is (has-feature? conn :foo)))))
-
-;;; --------------------------------------------------------
-;;; END
-;;; --------------------------------------------------------
