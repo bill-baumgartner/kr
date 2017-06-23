@@ -1,18 +1,11 @@
 (ns kr.sesame.test-rdf
-  (use clojure.test
-       [kr.sesame.test-kb :exclude [test-ns-hook]])
-  (require kr.core.test-kb
-           kr.core.test-rdf))
+  (:require [clojure.test :refer [run-tests]]
+            [kr.core.test-kb :refer [*kb-creator-fn*]]
+            kr.core.test-rdf
+            [kr.sesame.test-kb :refer [sesame-memory-test-kb]]))
 
-;;; --------------------------------------------------------
-;;; 
-;;; --------------------------------------------------------
+(def sesame-kb-creator-fn sesame-memory-test-kb)
 
 (defn test-ns-hook []
-  (binding [kr.core.test-kb/*kb-creator-fn*
-            sesame-memory-test-kb]
+  (binding [*kb-creator-fn* sesame-kb-creator-fn]
     (run-tests 'kr.core.test-rdf)))
-
-;;; --------------------------------------------------------
-;;; END
-;;; --------------------------------------------------------

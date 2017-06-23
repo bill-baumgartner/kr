@@ -1,34 +1,26 @@
 (ns kr.sesame.test-kb
-  (use clojure.test
-       kr.core.kb
-       kr.sesame.kb
-       kr.sesame.writer-kb)
-  (require kr.core.test-kb)
-  (import java.io.ByteArrayOutputStream))
+  (:require [clojure.test :refer [run-tests]]
+            [kr.core.kb :as c-kb]
+            [kr.sesame
+             [kb :refer [new-sesame-memory-kb]]
+             [writer-kb :refer [new-sesame-writer-kb]]]
+            [kr.core.test-kb :as t-kb])
+  (:import [java.io ByteArrayOutputStream]))
 
 ;;; --------------------------------------------------------
 ;;; 
 ;;; --------------------------------------------------------
 
 (defn sesame-memory-test-kb []
-  (kr.core.kb/open
-   (kr.sesame.kb/new-sesame-memory-kb)))
+  (c-kb/open (new-sesame-memory-kb)))
 
 (defn test-ns-hook []
-  (binding [kr.core.test-kb/*kb-creator-fn*
-            sesame-memory-test-kb]
+  (binding [t-kb/*kb-creator-fn* sesame-memory-test-kb]
     (run-tests 'kr.core.test-kb)))
 
-
-;;run the kb tests for the writer-kb too
 (defn sesame-writer-test-kb []
   (new-sesame-writer-kb (ByteArrayOutputStream.)))
 
 (defn test-ns-hook []
-  (binding [kr.core.test-kb/*kb-creator-fn*
-            sesame-writer-test-kb]
+  (binding [t-kb/*kb-creator-fn* sesame-writer-test-kb]
     (run-tests 'kr.core.test-kb)))
-
-;;; --------------------------------------------------------
-;;; END
-;;; --------------------------------------------------------
