@@ -48,6 +48,7 @@
   (construct-visit-pattern [kb visitor create-pattern pattern]
                            [kb visitor create-pattern pattern options])
 
+  (boolean-sparql [kb sparql-string] "evaluates boolean sparql query")
   (ask-sparql [kb sparql-string] "boolean asks a sparql query")
   (query-sparql [kb sparql-string] "gets bindings for sparql query")
   (count-sparql [kb sparql-string])

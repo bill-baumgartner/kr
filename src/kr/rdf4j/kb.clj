@@ -156,6 +156,8 @@
     (rdf4j-construct-visit-pattern kb visitor create-pattern pattern options))
 
 
+  (boolean-sparql [kb query-string]
+    (rdf4j-boolean-sparql kb query-string))
   (ask-sparql [kb query-string]
     (rdf4j-ask-sparql kb query-string))
   (query-sparql [kb query-string]

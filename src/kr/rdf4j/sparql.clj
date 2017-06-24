@@ -98,6 +98,12 @@
 ;;; main queries
 ;;; --------------------------------------------------------
 
+(defn rdf4j-boolean-sparql [kb query-string]
+  (.evaluate ^BooleanQuery
+             (.prepareBooleanQuery ^RepositoryConnection (connection! kb)
+                                   QueryLanguage/SPARQL
+                                   query-string)))
+
 ;;this returns a boolean
 (defn rdf4j-ask-sparql [kb query-string]
   (.evaluate ^BooleanQuery
