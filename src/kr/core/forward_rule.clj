@@ -43,7 +43,7 @@
                                                ;reify :reify
                                                :as rule}]
   (let [head-vars (variables head)
-        body-vars (variables body)]
+        body-vars (variables body)]                         ;TODO: same thing here, need to switch based on sparql string
     (every? (set body-vars)
             (remove (set (reify-variables rule)) head-vars))))
 
@@ -59,7 +59,7 @@
                                             body :body
                                             :as rule}]
   (let [head-vars (variables head)
-        body-vars (variables body)
+        body-vars (variables body)                          ;TODO: need to switch based on body or body-sparql
         reify-vars (reify-variables rule)]
     (every? (set reify-vars)
             (remove (set body-vars) head-vars))))

@@ -43,6 +43,9 @@
 ;; ([expr var?] (distinct-elements expr var?))
 ;; ([expr var? branch? children] (distinct-elements expr var? branch? children))
 
+
+;;TODO: need a variables fn for sparql-str
+
 (defn symbols [expr]
   (distinct-elements symbol? expr))
 
