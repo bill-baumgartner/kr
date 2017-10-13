@@ -155,13 +155,13 @@
               (query '((?/person foaf/name ?/name)
                        (:optional
                         (?/person foaf/mbox ?/email))
-                       (:bound ?/email))))))
+                        (:filter (:bound ?/email)))))))
       (is (= 1 ;just bob
              (count 
               (query '((?/person foaf/name ?/name)
                        (:optional
                         (?/person foaf/mbox ?/email))
-                       (:not (:bound ?/email))))))))
+                        (:filter (:not (:bound ?/email)))))))))
   
 (kb-test test-not-operator test-triples-6-1
       (is (= 1 ;just bob
@@ -169,13 +169,13 @@
               (query '((?/person foaf/name ?/name)
                        (:optional
                         (?/person foaf/mbox ?/email))
-                       (:not (:bound ?/email)))))))
+                        (:filter (:not (:bound ?/email))))))))
       (is (= 1 ;just bob
              (count 
               (query '((?/person foaf/name ?/name)
                        (:optional
                         (?/person foaf/mbox ?/email))
-                       (! (:bound ?/email))))))))
+                        (:filter (! (:bound ?/email)))))))))
 
 (kb-test test-numbers test-triples-numbers-equality
       (is (= 2 ;two because of reflection
@@ -183,24 +183,24 @@
                              (?/person foaf/age ?/age1)
                              (?/person2 foaf/surname ?/name)
                              (?/person2 foaf/age ?/age2)
-                             (= ?/age1 ?/age2)
-                             (!= ?/person ?/person2)
+                              (:filter (= ?/age1 ?/age2))
+                              (:filter (!= ?/person ?/person2))
                              )))))
       (is (= 2 
              (count (query '((?/person foaf/surname ?/name)
                              (?/person foaf/age ?/age1)
                              (?/person2 foaf/surname ?/name)
                              (?/person2 foaf/age ?/age2)
-                             (> ?/age1 ?/age2)
+                              (:filter (> ?/age1 ?/age2))
                              ))))))
 
 (kb-test test-n-ary-or test-triples-numbers-equality
       (is (= 3 
              (count (query '((?/person foaf/surname ?/name)
                              (?/person foaf/age ?/age)
-                             (:or (= ?/age 30)
+                              (:filter (:or (= ?/age 30)
                                   (= ?/age 40)
-                                  (= ?/age 50))))))))
+                                  (= ?/age 50)))))))))
 
 (kb-test test-boxed-number test-triples-numbers-equality
       (is (= 2 
@@ -225,7 +225,7 @@
          ;;      nested escaped quotes
          (is (= 2
                 (count (query '((?/person foaf/firstname ?/x)
-                                (= (:lang ?/x) ["en"]))))))
+                                 (:filter (= (:lang ?/x) ["en"])))))))
          ;; the next to are auto-languaged into "en"
          (is (= 1
                 (count (query '((?/person foaf/firstname "Bob"))))))
@@ -274,15 +274,15 @@
                              (?/person foaf/age ?/age1)
                              (?/person2 foaf/surname ?/name)
                              (?/person2 foaf/age ?/age2)
-                             (= ?/age1 ?/age2)
-                             (!= ?/person ?/person2)
+                              (:filter (= ?/age1 ?/age2))
+                              (:filter (!= ?/person ?/person2))
                              )))))
       (is (= 2 
              (count (query `((?/person foaf/surname ?/name)
                              (?/person foaf/age ?/age1)
                              (?/person2 foaf/surname ?/name)
                              (?/person2 foaf/age ?/age2)
-                             (> ?/age1 ?/age2)
+                              (:filter (> ?/age1 ?/age2))
                              ))))))
 
 
@@ -291,18 +291,18 @@
              (count (query `((?/person foaf/name ?/name))))))
       (is (= 1
              (count (query `((?/person foaf/name ?/name)
-                             (= "Bob" ?/name))))))
+                              (:filter (= "Bob" ?/name)))))))
       ;; box to drop the language tag since none given
       (is (= 0
              (count (query `((?/person foaf/name ?/name)
-                             (= ["Bob"] ?/name)))))))
+                              (:filter (= ["Bob"] ?/name))))))))
 
 (kb-test test-regex-operator test-triples-6-3
       (is (= 2
              (count (query `((?/person foaf/name ?/name))))))
       (is (= 1
              (count (query `((?/person foaf/name ?/name)
-                             (:regex ?/name "^ali" "i")))))))
+                              (:filter (:regex ?/name "^ali" "i"))))))))
 
 
 (kb-test test-uri-pat  test-triples-uri

@@ -6,11 +6,7 @@
   (import java.util.Map ;is this actaully used?
           java.net.URI))
 
-;;; --------------------------------------------------------
-;;; constants and variables
-;;; --------------------------------------------------------
-
-;;; constants
+;; ----------------------------------------------------------- constants --- ;;
 
 (def select-default "")
 (def select-distinct "DISTINCT ")
@@ -19,7 +15,7 @@
 (def sparql-1-0 :sparql-1-0)
 (def sparql-1-1 :sparql-1-1)
 
-;;; dynamic variables to control function
+;; ------------------------------- dynamic variables to control function --- ;;
 
 (defonce ^:dynamic *select-type* select-default)
 
@@ -31,9 +27,7 @@
 
 (defonce ^:dynamic *force-prefixes* nil)
 
-;;; --------------------------------------------------------
-;;; protocol
-;;; --------------------------------------------------------
+;; --------------------------------------------------------- KB protocol --- ;;
 
 (defprotocol sparqlKB
   (ask-pattern [kb pattern] [kb pattern options]
@@ -56,10 +50,7 @@
   (construct-sparql [kb sparql-string])
   (construct-visit-sparql [kb visitor sparql-string]))
 
-
-;;; --------------------------------------------------------
-;;; helpers
-;;; --------------------------------------------------------
+;; ---------------------------------------------------------- helper fns --- ;;
 
 ;; shouldn't these be calling the RDF based ones?
 
@@ -80,8 +71,6 @@
 (defn sparql-str-lang [s l]
   (str (pr-str s) "@" l))
 
-
-
 (defn sparql-ify-uri [uri]
   (sparql-uri (.toString uri)))
 
@@ -94,9 +83,6 @@
 
 (defmethod sparql-ify String [s] (pr-str s))
 (defmethod sparql-ify :default [s] (pr-str s))
-
-
-
 
 ;; it's possible this could be done faster with a call to rdf/object
 ;;   and then re-serializing that
@@ -125,7 +111,6 @@
    ;;plain literal including plain string 
         ;;:else (pr-str s)))
         :else (sparql-ify s)))
-
 
 ;; :inverse
 ;; :or
@@ -198,13 +183,9 @@
 
 (def property-position-to-sparql property-path)
 
+;; -------------------------------------------------- query construction --- ;;
 
-;;; --------------------------------------------------------
-;;; query text
-;;; --------------------------------------------------------
-
-;;; query component construction
-;;; --------------------------------------------------------
+;; --- blocks
 
 (declare sparql-query-body)
 
@@ -243,10 +224,57 @@
        (sparql-query-body optional-clauses)
        " }\n "))
 
+(defn graph-body [graph-clauses]
+  (str " GRAPH " (first graph-clauses) " { \n"
+       (sparql-query-body (rest graph-clauses))
+       " }\n "))
+
+;; --- operators
+
+(declare operator-body)
+
+(defn pound-operator [args]
+  (str " \"#\" "))
+
+(defn filter-body [filter-clauses]
+  (str " FILTER ( "
+       (operator-body filter-clauses)
+       " )\n "))
+
+(defn bind-body [bind-clauses]
+  (str " BIND "
+       (operator-body bind-clauses)
+       " \n "))
+
+(defn iri-body [iri-clauses]
+  (str " IRI "
+       (operator-body iri-clauses)
+       " \n "))
+
+(defn concat-body [concat-clauses]
+  (str " CONCAT "
+       (operator-body concat-clauses)
+       " \n "))
+
+(defn strafter-body [strafter-clauses]
+  (str " STRAFTER "
+       (operator-body strafter-clauses)
+       " \n "))
+
+(defn strbefore-body [strbefore-clauses]
+  (str " STRBEFORE "
+       (operator-body strbefore-clauses)
+       " \n "))
+
 ;; (def operator-bound [args]
 ;;      (str " bound(" (filter-body (first args))  ") "))
 
-(declare operator-body)
+(defn empty-operator [op-name]
+  (str op-name))
+
+(defn naked-unary-operator [op-name]
+  (fn [args]
+    (str " " op-name (operator-body (first args)))))
 
 (defn unary-operator [op-name]
   (fn [args]
@@ -262,6 +290,13 @@
     (str " " op-name "(" (operator-body (first args)) ", "
          (operator-body (second args)) ") ")))
 
+(defn prefix-n-ary-operator [op-name]
+  (fn [args]
+    (str op-name " ( "
+         (apply str (interpose (map operator-body args)
+                               ))
+         " ) \n ")))
+
 (defn n-ary-operator [op-name]
   (fn [args]
     (str " ( "
@@ -269,10 +304,8 @@
                                (map operator-body args)))
          " ) \n ")))
 
-
 (defn not-operator [args]
-  (str "!" (operator-body (first args))))
-
+  (str " ! " (operator-body (first args))))
 
 ;; if the arg is a raw string box it, otherwise leave it alone
 (defn safe-box-raw-string [arg]
@@ -304,6 +337,24 @@
       :str (unary-operator "str")
       :lang (unary-operator "lang")
       :datatype (unary-operator "datatype")
+      ;; duplicate bind
+      :pound pound-operator  
+      :bind (naked-unary-operator "bind")   
+      :filter (unary-operator "filter")   
+      :strafter (binary-prefix-operator "strafter")
+      :strbefore (binary-prefix-operator "strbefore")
+      :concat (binary-prefix-operator "concat")
+      :integer (unary-operator "xsd:integer")  
+      ;; The implementation for IRI() is not consistent across all stores.
+      ;; Some handle language and type operators, but others do not.
+      ;;
+      ;; For example: https://www.w3.org/2009/sparql/wiki/Feature:CreatingIrisAndLiterals#Existing_Implementation.28s.29
+      ;;
+      ;; Jena, in particular, does not and simply returns an empty result when
+      ;; asked to create an IRI from a lanuage-tagged string.
+      :iri (fn [args]
+             (str "iri ( str (" (operator-body (first args))  ") )"))
+
       ;;:isBLANK (unary-operator "isBlank")
       ;;:isLITERAL (unary-operator "isLiteral")
 
@@ -318,6 +369,8 @@
       "&&" (n-ary-operator "&&")
       "!" not-operator
 
+      := (binary-operator "=")
+      :!= (binary-operator "!=")
       "=" (binary-operator "=")
       "!=" (binary-operator "!=")
       "<" (binary-operator "<")
@@ -328,7 +381,7 @@
       "/" (binary-operator "/")
       "+" (binary-operator "+")
       "-" (binary-operator "-")
-
+      :as (binary-operator "AS")
 
       ;; '|| (n-ary-operator "||")
       ;; '&& (n-ary-operator "&&")
@@ -391,9 +444,7 @@
         (item-to-sparql operator-expression)))))
         ;;(str operator-expression)))))
 
-(defn filter-body [filter-clause]
-  (str " FILTER ( " (operator-body filter-clause) ") "))
-
+;; -------------------------------------------------------------- SPARQL --- ;;
 
 (defn sparql-query-body [triple-pattern]
   (cond 
@@ -404,13 +455,18 @@
      (apply str (interleave (map sparql-query-body triple-pattern)
                             ;;(repeat ". \n")))
                             (repeat " \n")))
-   (sparql-operator? (first triple-pattern)) (filter-body triple-pattern)
+   ;; used as a catch-all; this routes anything unusual to a FILTER.
+   ;; (sparql-operator? (first triple-pattern)) (filter-body triple-pattern)
+   (sparql-operator? (first triple-pattern)) (operator-body triple-pattern)
+   (= :bind (first triple-pattern)) (bind-body triple-pattern)
+   (= :iri (first triple-pattern)) (iri-body triple-pattern)
+   (= :concat (first triple-pattern)) (concat-body triple-pattern)
+   (= :strafter (first triple-pattern)) (strafter-body triple-pattern)      
+   (= :filter (first triple-pattern)) (filter-body triple-pattern)
    (= :union (first triple-pattern)) (union-body (rest triple-pattern))
    (= :optional (first triple-pattern)) (optional-body (rest triple-pattern))
+   (= :graph (first triple-pattern)) (graph-body (rest triple-pattern))
    :default (sparql-statement triple-pattern)))
-
-;;; full query bodies
-;;; --------------------------------------------------------
 
 (defn sparql-ask-query [triple-pattern & [options]]
      (let [vars (variables triple-pattern)
@@ -424,8 +480,7 @@
         "}")))
 
 (defn sparql-select-query [triple-pattern & [options]]
-  (let [vars (or (and options
-                      (:select-vars options))
+  (let [vars (or (and options (:select-vars options))
                  (variables triple-pattern))
         non-vars (symbols-no-vars triple-pattern)
         namespaces (distinct (map namespace non-vars))
@@ -440,9 +495,7 @@
      "}"
      (if *select-limit*
        (str " LIMIT " *select-limit* " ")
-       "")
-     )))
-
+       ""))))
 
 (defn sparql-construct-query [create-pattern triple-pattern & [options]]
   (let [;;vars (or (and options
@@ -459,7 +512,7 @@
      "\n"
      "WHERE { "
      (sparql-query-body triple-pattern)
-     "}"
+     " } "
      (if *select-limit*
        (str " LIMIT " *select-limit* " ")
        "")
@@ -495,11 +548,7 @@
        "")
      )))
 
-;;; --------------------------------------------------------
-;;; --------------------------------------------------------
-;;; query helpers
-;;; --------------------------------------------------------
-;;; --------------------------------------------------------
+;; ------------------------------------------------------- query helpers --- ;;
 
 (defn ask
   ([pattern] (ask *kb* pattern))
@@ -527,7 +576,6 @@
      (binding [*kb* kb]
        (visit-pattern kb visitor pattern options))))
 
-
 (defn count-query
 ;;(defn query-count
   ([pattern] (count-query *kb* pattern))
@@ -535,7 +583,6 @@
                               (count-pattern kb pattern options))))
 
 (def query-count count-query)
-
 
 (defn construct
   ([create-pattern pattern]
@@ -554,8 +601,6 @@
                                 create-pattern
                                 pattern
                                 options))))
-
-
 
 (defn sparql-ask
   ([sparql-string] (ask *kb* sparql-string))
@@ -602,13 +647,9 @@
      (binding [*kb* kb]
        (construct-visit-sparql *kb* visitor sparql-string))))
 
-
-;;; --------------------------------------------------------
-;;; --------------------------------------------------------
-
-;;; --------------------------------------------------------
-;;; these are some crazy helpers that need to be revisited
-;;; --------------------------------------------------------
+;; ------------------------------------------------------------------------- ;;
+;; these are some crazy helpers that need to be revisited
+;; ------------------------------------------------------------------------- ;;
 
 (defn pmap-query [kb fcn l]
   (pmap (fn [x num]
@@ -628,7 +669,6 @@
         l
         (range)))
 
-
 (defn pmap-some [kb fcn list-list]
   (pmap (fn [l num]
           (with-new-connection kb conn
@@ -638,11 +678,3 @@
                   l)))
         list-list
         (range)))
-
-
-
-;;; --------------------------------------------------------
-;;; END
-;;; --------------------------------------------------------
-
-
