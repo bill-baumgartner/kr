@@ -1,5 +1,5 @@
 (ns kr.core.test-rdf
-  (:require [clojure.test :refer [is testing]]
+  (:require [clojure.test :refer [is]]
             [kr.core.test-kb :refer [kb-test test-triples]]
             [kr.core.kb :refer [*kb*]]
             [kr.core.clj-ify :refer [*literal-mode* clj-ify]]
@@ -253,7 +253,7 @@
          (is (nil? (rdf/add *kb* 'ex/k 'ex/l 4)))
          (is (nil? (rdf/add *kb* 'ex/m 'ex/n ["Bob"])))
 
-         (testing "literal-mode nil"
+
            (binding [*literal-mode* nil]
              (is (= "foo" (get-literal 'ex/a 'ex/b)))
              (is (= 4 (get-literal 'ex/c 'ex/d)))
@@ -261,9 +261,9 @@
              (is (= "Bob" (get-literal 'ex/g 'ex/h)))
              (is (= "Bob" (get-literal 'ex/i 'ex/j)))
              (is (= 4 (get-literal 'ex/k 'ex/l)))
-             (is (= "Bob" (get-literal 'ex/m 'ex/n)))))
+             (is (= "Bob" (get-literal 'ex/m 'ex/n))))
 
-         (testing "literal-mode clj"
+
            (binding [*literal-mode* :clj]
              (is (= "foo" (get-literal 'ex/a 'ex/b)))
              (is (= 4 (get-literal 'ex/c 'ex/d)))
@@ -271,9 +271,9 @@
              (is (= "Bob" (get-literal 'ex/g 'ex/h)))
              (is (= "Bob" (get-literal 'ex/i 'ex/j)))
              (is (= 4 (get-literal 'ex/k 'ex/l)))
-             (is (= "Bob" (get-literal 'ex/m 'ex/n)))))
+             (is (= "Bob" (get-literal 'ex/m 'ex/n))))
 
-         (testing "literal-mode clj-type"
+
            (binding [*literal-mode* :clj-type]
              (is (= ["foo" 'ex/custom] (get-literal 'ex/a 'ex/b)))
              (is (= [4 'xsd/integer] (get-literal 'ex/c 'ex/d)))
@@ -282,9 +282,9 @@
              ;;(is (= ["Bob" ""] (get-literal 'ex/i 'ex/j)))
              (is (= ["Bob" nil] (get-literal 'ex/i 'ex/j)))
              (is (= [4 'xsd/integer] (get-literal 'ex/k 'ex/l)))
-             (is (= ["Bob" nil] (get-literal 'ex/m 'ex/n)))))
+             (is (= ["Bob" nil] (get-literal 'ex/m 'ex/n))))
 
-         (testing "literal-mode string"
+
            (binding [*literal-mode* :string]
              (is (= ["foo" 'ex/custom] (get-literal 'ex/a 'ex/b)))
              (is (= ["4" 'xsd/integer] (get-literal 'ex/c 'ex/d)))
@@ -293,9 +293,9 @@
              ;;(is (= ["Bob" ""] (get-literal 'ex/i 'ex/j)))
              (is (= ["Bob" nil] (get-literal 'ex/i 'ex/j)))
              (is (= ["4" 'xsd/integer] (get-literal 'ex/k 'ex/l)))
-             (is (= ["Bob" nil] (get-literal 'ex/m 'ex/n)))))
+             (is (= ["Bob" nil] (get-literal 'ex/m 'ex/n))))
 
-         (testing "literal-mode fn:type-or-lang"
+
            (binding [*literal-mode* (fn [lit type-or-lang]
                                       (if (= type-or-lang 'ex/custom)
                                         :clj-type
@@ -306,9 +306,9 @@
              (is (= "Bob" (get-literal 'ex/g 'ex/h)))
              (is (= "Bob" (get-literal 'ex/i 'ex/j)))
              (is (= 4  (get-literal 'ex/k 'ex/l)))
-             (is (= "Bob" (get-literal 'ex/m 'ex/n)))))
+             (is (= "Bob" (get-literal 'ex/m 'ex/n))))
 
-         (testing "literal-mode fn:string?"
+
            (binding [*literal-mode* (fn [lit type-or-lang]
                                       (if (string? type-or-lang)
                                         :clj-type
@@ -320,4 +320,4 @@
              ;;(is (= ["Bob" ""] (get-literal 'ex/i 'ex/j)))
              (is (= "Bob" (get-literal 'ex/i 'ex/j)))
              (is (= 4 (get-literal 'ex/k 'ex/l)))
-             (is (= "Bob" (get-literal 'ex/m 'ex/n))))))
+             (is (= "Bob" (get-literal 'ex/m 'ex/n)))))

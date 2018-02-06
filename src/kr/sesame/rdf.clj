@@ -5,25 +5,25 @@
        kr.core.clj-ify
        [kr.core.rdf :exclude (resource)]
        clojure.java.io)
-  (:import [java.io IOException]
+  (import
+       java.io.IOException
 
-    ;; Interfaces
-           [org.openrdf.model Literal Resource Statement URI]
+       ;interfaces
+       org.openrdf.model.URI
+       org.openrdf.model.Resource
+       org.openrdf.model.Statement
+       org.openrdf.model.Literal
 
-    ;; Classes
+       ;Classes
+       org.openrdf.model.impl.StatementImpl
+       org.openrdf.model.impl.URIImpl
+       org.openrdf.model.impl.LiteralImpl
 
-    ;; FIXME: Depending on impl classes is suspect, much like relying on
-    ;; anything in com.sun.*.  These are internal classes from which no
-    ;; consistent interface should be expected.  We should by using the
-    ;; interfaces that these implement and the appropriate ValueFactory
-    ;; to create instances of these where necessary.
-           [org.openrdf.model.impl StatementImpl URIImpl]
-
-           [org.openrdf.repository Repository RepositoryConnection]
-           org.openrdf.repository.http.HTTPRepository
-           org.openrdf.query.resultio.TupleQueryResultFormat
-           org.openrdf.rio.RDFFormat
-           org.openrdf.rio.Rio))
+       org.openrdf.repository.Repository
+       org.openrdf.repository.http.HTTPRepository
+       org.openrdf.repository.RepositoryConnection
+       org.openrdf.query.resultio.TupleQueryResultFormat
+       org.openrdf.rio.RDFFormat))
 
 ;; ---------------------------------------------------------------------------
 ;; helpers
@@ -162,27 +162,19 @@
   (literal-clj-ify kb l))
 
 (defn literal-language [l]
-  (let [lang (.orElse (.getLanguage l) nil)]
+  (let [lang (.getLanguage l)]
     (if (= "" lang)
       nil
       lang)))
 
-(def ^{:private true} rdf:langString
-  "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")
 
-(def ^{:private true} xsd:string
-  "http://www.w3.org/2001/XMLSchema#string")
+(defn literal-type-or-language [kb l]
+  (or (let [dt (.getDatatype l)]
+        (and dt
+             (clj-ify kb dt)))
+      ;;(convert-string-to-sym kb dt)))
+      (literal-language l)))
 
-(defn literal-type-or-language [kb literal]
-  (let [data-type (.getDatatype literal)]
-    (cond (= (str data-type) rdf:langString) (literal-language literal)
-          ;; In an apparent chanage between Sesame 2 and Sesame 4, an IRI is
-          ;; now returned as the type for string literals.  Honouring this
-          ;; seems like the right thing to do, but to preserve backwards
-          ;; compatibility, we continue to return 'nil' as the type for
-          ;; strings.
-          (= (str data-type) xsd:string) nil
-          true (clj-ify kb data-type))))
 
 (defn literal-to-clj [kb l]
   (clj-ify-literal kb l
@@ -272,7 +264,7 @@
    (.add (connection! kb)
          file
          "" ;nil ;""
-         (Rio/getParserFormatForFileName (.getName file))
+         (RDFFormat/forFileName (.getName file))
          (sesame-context-array kb *graph*)))
   ([kb file type]
    (.add (connection! kb)
@@ -308,10 +300,9 @@
 (defn sesame-query-statement
   ([kb s p o context]
    (clj-ify kb
-            (let [result (.getStatements ^RepositoryConnection (connection! kb)
-                                         ^Resource (and s (kr.core.rdf/resource kb s))
-                                         ^URI (and p (property kb p))
-                                         ^Value (and o (object kb o))
-                                         *use-inference*
-                                         (sesame-context-array kb context))]
-              result))))
+            (.getStatements ^RepositoryConnection (connection! kb)
+                            ^Resource (and s (kr.core.rdf/resource kb s))
+                            ^URI (and p (property kb p))
+                            ^Value (and o (object kb o))
+                            *use-inference*
+                            (sesame-context-array kb context)))))
