@@ -4,7 +4,8 @@
        kr.core.clj-ify
        kr.core.rdf
        kr.core.sparql
-       kr.sesame.rdf)
+       kr.sesame.rdf
+       clojure.pprint)
 
   (import org.openrdf.model.impl.StatementImpl
           org.openrdf.model.impl.URIImpl
@@ -124,7 +125,6 @@
                                  query-string)))
 
 (defn sesame-query-sparql [kb query-string]
-  ;(prn query-string)
   (let [tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]

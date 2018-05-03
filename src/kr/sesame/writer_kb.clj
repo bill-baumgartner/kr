@@ -74,11 +74,11 @@
   ;; (query-statement [kb s p o context]
   ;;   (sesame-query-statement kb s p o context))
 
-  ;; (load-rdf-file [kb file] (sesame-load-rdf-file kb file))
-  ;; (load-rdf-file [kb file type] (sesame-load-rdf-file kb file type))
+  ; (load-rdf-file [kb file] (sesame-load-rdf-file kb file))
+  ; (load-rdf-file [kb file type] (sesame-load-rdf-file kb file type))
   ;;the following will throw exception for unknown rdf format
-  ;;(load-rdf-stream [kb stream] (sesame-load-rdf-stream kb stream))
-  ;;(load-rdf-stream [kb stream type] (sesame-load-rdf-stream kb stream type))
+  ;(load-rdf-stream [kb stream] (sesame-load-rdf-stream kb stream))
+  ;(load-rdf-stream [kb stream type] (sesame-load-rdf-stream kb stream type))
 )
 
 ;;; "constructors"

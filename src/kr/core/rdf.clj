@@ -15,7 +15,7 @@
 ;;; specials
 ;;; --------------------------------------------------------
 
-(def ^:dynamic *use-inference* true)
+(def ^:dynamic *use-inference* false)
 
 (def ^:dynamic *graph* nil)
 

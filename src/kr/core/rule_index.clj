@@ -48,7 +48,7 @@
 (defn var-map [{head :head
                 body :body
                 :as rule}]
-  (let [vars (variables (concat head body))]
+  (let [vars (concat (variables head) (variables body))]
     (reduce (fn [hash v]
               (conj hash [v (var-to-ns-var v)]))
             {}

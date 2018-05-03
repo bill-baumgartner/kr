@@ -37,8 +37,24 @@
   ([elem? expr branch? children]
      (set (filter elem? (tree-seq branch? children expr)))))
 
+(defn variables-from-sparql [query]
+  "Extract the variables returned by the select statement in the input query. Note: will not work with 'select *'."
+  (when (and (not (.isEmpty query)) (.contains (.toLowerCase query) "select"))
+  (map symbol
+       (clojure.string/split
+         (clojure.string/replace
+           (clojure.string/replace
+             (clojure.string/trim (nth (re-find #"select (.*)\{"
+                                                (.toLowerCase (clojure.string/replace (clojure.string/replace query #"\n" " ") #"\s+" " ")))
+                                       1))
+             #" where$" "")
+           #"\?" "?/")
+         #" "))))
+
 (defn variables [expr]
-  (distinct-elements variable? expr))
+  "If the input expression is a string, then we assume that it is a SPARQL query."
+  (cond (string? expr) (variables-from-sparql expr)
+        :else (distinct-elements variable? expr)))
 ;; ([expr] (list-variables expr #'variable? #'nonempty-seq #'seq))
 ;; ([expr var?] (distinct-elements expr var?))
 ;; ([expr var? branch? children] (distinct-elements expr var? branch? children))
