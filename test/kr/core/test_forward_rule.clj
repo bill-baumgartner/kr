@@ -154,15 +154,15 @@
                                   :ns "ex" :prefix "DEPT_"}])
                   })
 
-
+;; todo - reify ordering doesn't seem to matter here, but does in the kabob project???
 (def rule-8 '{:head ((?/hacker ex/inDept    ?/dept)
                      (?/dept ex/deptID    ?/deptid)
                      (?/dept   rdf/type     ex/Department))
               :body ((?/hacker ex/hasBoss   ?/boss)
                      (?/hacker ex/atCompany ?/co))
-              :reify ([?/dept {:ln (:md5 ?/boss ?/co)
+              :reify ([?/dept {:ln (:sha-1 ?/boss ?/co)
                                :ns "ex" :prefix "DEPT_"}]
-                      [?/deptid {:ln (:md5 ?/dept ?/co)
+                      [?/deptid {:ln (:sha-1 ?/dept ?/co)
                                  :ns "ex" :prefix "DEPT_"}])
               })
 
@@ -171,11 +171,73 @@
                          (?/dept   rdf/type     ex/Department))
                   :body ((?/hacker ex/hasBoss   ?/boss)
                          (?/hacker ex/atCompany ?/co))
-                  :reify ([?/deptid {:ln (:md5 ?/dept ?/co)
+                  :reify ([?/deptid {:ln (:sha-1 ?/dept ?/co)
                                      :ns "ex" :prefix "DEPT_"}]
-                          [?/dept {:ln (:md5 ?/boss ?/co)
+                          [?/dept {:ln (:sha-1 ?/boss ?/co)
                                    :ns "ex" :prefix "DEPT_"}])
                   })
+
+(def rule-8-sparql '{:head  ((?/hacker ex/inDept ?/dept)
+                              (?/dept ex/deptID ?/deptid)
+                              (?/dept rdf/type ex/Department))
+                     :body  "prefix ex: <http://www.example.org/>
+                             select ?hacker ?boss ?co {
+                                ?hacker ex:hasBoss ?boss .
+                                ?hacker ex:atCompany ?co .
+                             }"
+                     :reify ([?/dept {:ln (:md5 ?/boss ?/co)
+                                      :ns "ex" :prefix "DEPT_"}]
+                              [?/deptid {:ln (:md5 ?/dept ?/co)
+                                         :ns "ex" :prefix "DEPT_"}])
+                     })
+
+(def rule-8-sparql-missing-var '{:head  ((?/hacker ex/inDept ?/dept)
+                                          (?/dept ex/deptID ?/deptid)
+                                          (?/dept rdf/type ex/Department))
+                                 :body  "prefix ex: <http://www.example.org/>
+                             select ?hacker ?co {
+                                ?hacker ex:hasBoss ?boss .
+                                ?hacker ex:atCompany ?co .
+                             }"
+                                 :reify ([?/dept {:ln (:md5 ?/boss ?/co)
+                                                  :ns "ex" :prefix "DEPT_"}]
+                                          [?/deptid {:ln (:md5 ?/dept ?/co)
+                                                     :ns "ex" :prefix "DEPT_"}])
+                                 })
+
+(def rule-8-sparql-where '{:head  ((?/hacker ex/inDept ?/dept)
+                                    (?/dept ex/deptID ?/deptid)
+                                    (?/dept rdf/type ex/Department))
+                           :body  "prefix ex: <http://www.example.org/>
+                                   select ?hacker ?boss ?co
+                                   where {
+                                      ?hacker ex:hasBoss ?boss .
+                                      ?hacker ex:atCompany ?co .
+                                   }"
+                           :reify ([?/dept {:ln (:md5 ?/boss ?/co)
+                                            :ns "ex" :prefix "DEPT_"}]
+                                    [?/deptid {:ln (:md5 ?/dept ?/co)
+                                               :ns "ex" :prefix "DEPT_"}])
+                           })
+
+(def rule-8-sparql-reify-inv '{:head  ((?/hacker ex/inDept ?/dept)
+                                        (?/dept ex/deptID ?/deptid)
+                                        (?/dept rdf/type ex/Department))
+                               :body  "prefix ex: <http://www.example.org/>
+                                       select ?hacker ?boss ?co
+                                       where {
+                                          ?hacker ex:hasBoss ?boss .
+                                          ?hacker ex:atCompany ?co .
+                                       }"
+                               :reify ([?/deptid {:ln (:md5 ?/dept ?/co)
+                                                  :ns "ex" :prefix "DEPT_"}]
+                                        [?/dept {:ln (:md5 ?/boss ?/co)
+                                                 :ns "ex" :prefix "DEPT_"}])
+                               })
+
+
+
+
 
 (def rule-9-optional '{:head ((?/hacker ex/empname   ?/empname))
                        :body ((?/hacker ex/atCompany ?/co)
@@ -212,6 +274,9 @@
                          })
 
 
+
+
+
 ;;; --------------------------------------------------------
 ;;; tests
 ;;; --------------------------------------------------------
@@ -225,6 +290,12 @@
   (is (not (forward-safe-with-reification? bad-rule-7)))
   (is (not (all-head-vars-not-in-body-in-reify? bad-rule-7)))
   (is (not (all-reify-vars-in-head? bad-rule-7))))
+
+
+(deftest test-forward-safe-sparql
+  (is (not (forward-safe? rule-8-sparql-missing-var)))
+  (doseq [r (list rule-8 rule-8-sparql rule-8-sparql-where rule-8-sparql-reify-inv)]
+      (is (forward-safe-with-reification? r))))
 
 
 (kb-test test-forward-1 test-triples-6-3
@@ -288,9 +359,15 @@
          (is (ask '((ex/a ex/inDept ?/dept)
                     (ex/b ex/inDept ?/dept)))))
 
-
+;; todo -- failing with sha-1 instead of md5
 (kb-test test-forward-8-a test-triples-md5
          (run-forward-rule *kb* *kb* rule-8)
+
+         (println "--------------------")
+         (pprint (query '((?/org rdf/type ex/Department)
+                           (?/hack ex/inDept ?/org))))
+         (println "--------------------")
+
          (let [results (query '((?/org rdf/type ex/Department)))]
            (is (= 2 (count results))))
          (let [results (query '((?/person ex/inDept ?/dept)))]
@@ -313,6 +390,78 @@
                                       (_/dept ex/deptID ?/deptid))))
                       '?/deptid)))))
 
+
+(kb-test test-forward-8-a-sparql test-triples-md5
+         (run-forward-rule *kb* *kb* rule-8-sparql)
+         (let [results (query '((?/org rdf/type ex/Department)))]
+           (is (= 2 (count results))))
+         (let [results (query '((?/person ex/inDept ?/dept)))]
+           (is (= 3 (count results))))
+
+         (is (= ((first (query '((ex/a ex/inDept ?/dept)))) '?/dept)
+                ((first (query '((ex/b ex/inDept ?/dept)))) '?/dept)))
+
+         (is (= ((first (query '((ex/a ex/inDept _/dept)
+                                  (_/dept ex/deptID ?/deptid))))
+                  '?/deptid)
+                ((first (query '((ex/b ex/inDept _/dept)
+                                  (_/dept ex/deptID ?/deptid))))
+                  '?/deptid)))
+
+         (is (not (= ((first (query '((ex/a ex/inDept _/dept)
+                                       (_/dept ex/deptID ?/deptid))))
+                       '?/deptid)
+                     ((first (query '((ex/c ex/inDept _/dept)
+                                       (_/dept ex/deptID ?/deptid))))
+                       '?/deptid)))))
+
+
+(kb-test test-forward-8-a-sparql test-triples-md5
+         (run-forward-rule *kb* *kb* rule-8-sparql-where)
+         (let [results (query '((?/org rdf/type ex/Department)))]
+           (is (= 2 (count results))))
+         (let [results (query '((?/person ex/inDept ?/dept)))]
+           (is (= 3 (count results))))
+
+         (is (= ((first (query '((ex/a ex/inDept ?/dept)))) '?/dept)
+                ((first (query '((ex/b ex/inDept ?/dept)))) '?/dept)))
+
+         (is (= ((first (query '((ex/a ex/inDept _/dept)
+                                  (_/dept ex/deptID ?/deptid))))
+                  '?/deptid)
+                ((first (query '((ex/b ex/inDept _/dept)
+                                  (_/dept ex/deptID ?/deptid))))
+                  '?/deptid)))
+
+         (is (not (= ((first (query '((ex/a ex/inDept _/dept)
+                                       (_/dept ex/deptID ?/deptid))))
+                       '?/deptid)
+                     ((first (query '((ex/c ex/inDept _/dept)
+                                       (_/dept ex/deptID ?/deptid))))
+                       '?/deptid)))))
+
+
+;(def rule-8-inv '{:head ((?/hacker ex/inDept    ?/dept)
+;                          (?/dept ex/deptID    ?/deptid)
+;                          (?/dept   rdf/type     ex/Department))
+;                  :body ((?/hacker ex/hasBoss   ?/boss)
+;                          (?/hacker ex/atCompany ?/co))
+;                  :reify ([?/deptid {:ln (:sha-1 ?/dept ?/co)
+;                                     :ns "ex" :prefix "DEPT_"}]
+;                           [?/dept {:ln (:sha-1 ?/boss ?/co)
+;                                    :ns "ex" :prefix "DEPT_"}])
+;                  })
+
+;(def test-triples-md5
+;  '((ex/a    foaf/firstname   "Alice" )
+;     (ex/a ex/hasBoss ex/boss1)
+;     (ex/a ex/atCompany ex/co1)
+;
+;     (ex/b ex/hasBoss ex/boss1)
+;     (ex/b ex/atCompany ex/co1)
+;
+;     (ex/c ex/hasBoss ex/boss2)
+;     (ex/c ex/atCompany ex/co2)))
 
 (kb-test test-forward-8-b test-triples-md5
          (run-forward-rule *kb* *kb* rule-8-inv)
@@ -357,6 +506,7 @@
                      ((first (query '((ex/c ex/inDept _/dept)
                                       (_/dept ex/deptID ?/deptid))))
                       '?/deptid)))))
+
 
 (kb-test test-forward-8-d test-triples-md5-2
          (run-forward-rule *kb* *kb* rule-8-inv)
@@ -422,6 +572,68 @@
 ;;this should thorw an exception becuase of a loop in the reification
 (kb-test test-forward-10 test-triples-md5-2
          (is (thrown? Exception (run-forward-rule *kb* *kb* rule-11-exception))))
+
+
+
+(kb-test test-reification-clause-ordering test-triples-md5
+         (println (str "TESTING REIFICATION: initial triple count: " (count (query *kb* '((?/s ?/p ?/o))))))
+         (run-forward-rule *kb* *kb* rule-8)
+         (let [triples (query *kb* '((?/s ?/p ?/o)))]
+           (println (str "================= RULE 8 (" (count triples) ") ===================="))
+           (pr-str (str triples))
+           (println "=============================================")
+           (run-forward-rule *kb* *kb* rule-8-inv)
+           (let [new-triples (query *kb* '((?/s ?/p ?/o)))]
+             (println (str "+++++++++++++++++++ RULE 8 INV (" (count new-triples) ") +++++++++++++++++++++++++"))
+             (pr-str (str new-triples))
+             (println "++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+             (is (= (count triples) (count new-triples))))))
+
+
+
+(def test-rule-reify-proper-order
+  '{:name  "test-rule-2a"
+    :head  ((?/bio_sc rdfs/subClassOf ?/bio)
+             (?/bio_sc ex/other ?/other))
+    :body  ((?/rec ex/drug ?/drug)
+             (?/rec ex/bio ?/bio))
+    :reify ([?/other {:ln (:sha-1 ?/bio "other")
+                      :ns "ex" :prefix "O_"}]
+             [?/bio_sc {:ln (:sha-1 ?/bio ?/other)
+                        :ns "ex" :prefix "B_"}])
+    })
+
+(def test-rule-reify-improper-order
+  '{:name  "test-rule-2b"
+    :head  ((?/bio_sc rdfs/subClassOf ?/bio)
+             (?/bio_sc ex/other ?/other))
+    :body  ((?/rec ex/drug ?/drug)
+             (?/rec ex/bio ?/bio))
+    :reify ([?/bio_sc {:ln (:sha-1 ?/bio ?/other)
+                       :ns "ex" :prefix "B_"}]
+             [?/other {:ln (:sha-1 ?/bio "other")
+                       :ns "ex" :prefix "O_"}])
+    })
+
+
+(def old-triples '((ex/rec1 ex/drug ex/drug1)
+                    (ex/rec1 ex/bio ex/bio1)))
+
+(kb-test test-reification-clause-ordering-2 old-triples
+         (println (str "TESTING REIFICATION: initial triple count: " (count (query *kb* '((?/s ?/p ?/o))))))
+         (run-forward-rule *kb* *kb* test-rule-reify-proper-order)
+         (let [triples (query *kb* '((?/s ?/p ?/o)))]
+           (println (str "================= RULE PROPER (" (count triples) ") ===================="))
+           (pprint triples)
+           (println "=============================================")
+           (run-forward-rule *kb* *kb* test-rule-reify-improper-order)
+           (let [new-triples (query *kb* '((?/s ?/p ?/o)))]
+             (println (str "+++++++++++++++++++ RULE IMPROPER (" (count new-triples) ") +++++++++++++++++++++++++"))
+             (pprint new-triples)
+             (println "++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+             (is (= (count triples) (count new-triples))))))
+
+
 
 
 ;;; --------------------------------------------------------

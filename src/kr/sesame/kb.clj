@@ -4,6 +4,7 @@
        kr.core.sparql
        kr.sesame.rdf
        kr.sesame.sparql
+       clojure.pprint
        )
   (import 
    org.openrdf.model.URI

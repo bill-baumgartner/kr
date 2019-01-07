@@ -54,7 +54,11 @@
 (defn load-rules-from-directory [dir]
   (mapcat all-input
           (remove directory?
-                  (directory-seq dir))))
+                  (remove (fn [file]
+                            (or (not (.endsWith (str file) ".clj"))
+                                (.contains (str file) "deprecated")
+                                (.contains (str file) "under_construction")))
+                          (directory-seq dir)))))
 
 
 ;;loads from all the files that match the pattern
@@ -79,22 +83,38 @@
 ;;; static rule testing
 ;;; --------------------------------------------------------
 
+
 (defn connected-rule? [{head :head 
                         body :body
                         :as rule}]
-  (and (not (disjoint-assertions? body))
-       (not (disjoint-assertions? head))
-       ;; can't just test the combination -
-       ;;   the head could make the body connected when it otherwise isn't
-       (not (disjoint-assertions? (concat head body)))))
+  "This checks queries that have disjoint solutions, e.g. potential for cross-products.
+  Currently, if the body is itself a SPARQL query, this method simply returns true.
+  Further code would be needed to parse the variables from a SPARQL query. "
+  (cond (string? body) true
+  :else (let [dja-body (disjoint-assertions? body)
+              dja-head (disjoint-assertions? head)
+              dja-headbody (disjoint-assertions? (concat head body))]
+          (if dja-body (println (str "Warning disjoint assertions in rule body: " (:name rule))))
+          (if dja-head (println (str "Warning disjoint assertions in rule head: " (:name rule))))
+          (if dja-headbody (println (str "Warning disjoint assertions in rule head/body: " (:name rule))))
+          (and (not dja-body) (not dja-head) (not dja-headbody)))))
+
+       ; (and (not (disjoint-assertions? body))
+       ;(not (disjoint-assertions? head))
+       ;;; can't just test the combination -
+       ;;;   the head could make the body connected when it otherwise isn't
+       ;(not (disjoint-assertions? (concat head body))))))
 
 ;;test if there's a var in the head not mentioned in the body
 (defn all-head-vars-in-body? [{head :head
                                body :body
-                               :as rule}]
+                               :as  rule}]
   (let [head-vars (variables head)
-        body-vars (variables body)]
-    (every? (set body-vars) head-vars)))
+        body-vars (variables body)
+        result (every? (set body-vars) head-vars)]
+    (if (not result) (println (str "Warning all head variables not found in rule body: " (:name rule))))
+    result))
+
 
 (defn some-head-vars-in-body? [{head :head
                                body :body
@@ -114,18 +134,15 @@
                  (namespace sym))))
           ;;get list of distinct symbols, remove all literals
           (remove (complement symbol?)
-                  (distinct (flatten (concat head body))))))
+                  (distinct (flatten (concat head (if (string? body) '() body)))))))
   
 
 
-(defn bad-rules [test rules]
+(defn bad-rules [test rules fail-message]
   (let [bad (remove test rules)] ; remove if you pass the test
-    ;;print bad rules and meta data - TODO: this should go to logging
     (when *print-bad-rules*
       (doseq [rule bad]
-        (println "rule failed test " (str test))
-        (pprint (meta rule))
-        (pprint rule)))
+        (println fail-message (:source (meta rule)))))
     bad)) ; return the bad rules
 
 ;;; --------------------------------------------------------

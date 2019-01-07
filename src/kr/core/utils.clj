@@ -4,9 +4,8 @@
   (import java.io.InputStreamReader
           (java.util.jar JarFile JarEntry)
           java.security.MessageDigest
-          java.math.BigInteger))
-;;org.apache.commons.codec.binary.Base64
-
+          java.math.BigInteger
+          org.apache.commons.codec.binary.Base64))
 
 (def ^:dynamic *default-file-encoding* "UTF-8")
 
@@ -33,6 +32,13 @@
                                 (.update (.getBytes (str x) "UTF-8")))))
         16))
   ([x & rest] (md5 (apply str x rest))))
+
+(defn sha-1
+  ([x] (Base64/encodeBase64URLSafeString
+         ^bytes (.digest (doto (MessageDigest/getInstance "SHA1")
+                           (.reset)
+                           (.update (.getBytes (str x) "UTF-8"))))))
+  ([x & rest] (sha-1 (apply str x rest))))
 
 ;;need a set of flags to control encoding:
 ;; hex, 32, 36, 64 (+/- url safe)
@@ -129,7 +135,9 @@
   suffix on all returned paths to match the specified suffix
   parameter."
    (remove (fn [file]
-             (not (.endsWith (str file) suffix)))
+             (or (not (.endsWith (str file) suffix))
+                 (.contains (str file) "deprecated")
+                 (.contains (str file) "under_construction")))
            (classpath-matching path-part))))
 
 
@@ -206,8 +214,15 @@
                                   :end-line end}))))))))
 
 (defn all-input
-  ([source] (all-input source *dynamic-reader-fn*))
+  ([source] (try
+              (all-input source *dynamic-reader-fn*)
+              (catch Exception e
+                (println (str "Error while reading file: " source))
+                (throw e))))
   ([source modified-dynamic-reader-fn]
-     (if (*dynamic-source-fn* source)
-       (read-dynamic-all-input source modified-dynamic-reader-fn)
-       (read-all-input source))))
+   (try (if (*dynamic-source-fn* source)
+          (read-dynamic-all-input source modified-dynamic-reader-fn)
+          (read-all-input source))
+        (catch Exception e
+          (println (str "Error while reading file: " source))
+          (throw e)))))

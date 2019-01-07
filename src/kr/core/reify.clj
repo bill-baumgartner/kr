@@ -78,6 +78,10 @@
   (reify-sym (md5 (apply str rest))))
 
 
+(defn reify-sha-1 [& rest]
+  (reify-sym (sha-1 (apply str (sort (map str rest))))))
+
+
 ;;; --------------------------------------------------------
 ;;; regex
 ;;; --------------------------------------------------------
