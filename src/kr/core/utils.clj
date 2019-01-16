@@ -146,9 +146,10 @@
                (.substring resource-name
                            (if (.startsWith resource-name "@/") 2 1))
                resource-name)]
-    (InputStreamReader. 
-     (ClassLoader/getSystemResourceAsStream path) 
-     *default-file-encoding*)))
+    (InputStreamReader.
+      (.openStream
+        (clojure.java.io/resource path))
+        *default-file-encoding*)))
 
 (defn reader!
   "makes a reader one way or the other out of it's input.
