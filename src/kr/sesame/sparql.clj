@@ -125,9 +125,11 @@
                                  query-string)))
 
 (defn sesame-query-sparql [kb query-string]
-  (let [tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
+  (let [conn (connection! kb)
+        tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
+    (println (str "################### connection type: " (type conn) " QUERY: " query-string))
     (.setIncludeInferred tuplequery *use-inference*)
     (clj-ify kb (.evaluate ^TupleQuery tuplequery))))
 
