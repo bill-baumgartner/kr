@@ -2,3 +2,7 @@
 .classpath
 .settings/
 target/
+*.iml
+.idea/
+.lein-failures
+.lein-repl-history
