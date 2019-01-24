@@ -171,7 +171,8 @@
   (construct-visit-sparql [kb visitor sparql-string]
     (sesame-construct-visit-sparql kb visitor sparql-string))
 
-  )
+  (update-sparql [kb query-string]
+    (sesame-update-sparql kb query-string)))
 
 ;; TODO factor this out to a "connection" package
 

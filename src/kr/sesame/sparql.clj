@@ -18,7 +18,7 @@
           org.openrdf.query.BooleanQuery
           org.openrdf.query.TupleQuery
           org.openrdf.query.GraphQuery
-
+          org.openrdf.query.Update
 
           org.openrdf.query.TupleQueryResult
           org.openrdf.query.QueryLanguage
@@ -130,6 +130,12 @@
                                        query-string)]
     ;(.setIncludeInferred tuplequery *use-inference*) ;this line is the cause of 'distinct' error for blazegraph. The blazegraph quad store does not use inference, so it doesn't matter if this is set.
     (clj-ify kb (.evaluate ^TupleQuery tuplequery))))
+
+(defn sesame-update-sparql [kb query-string]
+  (let [update (.prepareUpdate ^RepositoryConnection (connection! kb)
+                                       QueryLanguage/SPARQL
+                                       query-string)]
+    (.execute ^Update update)))
 
 
 (defn sesame-visit-sparql [kb visitor query-string]

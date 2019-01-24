@@ -48,7 +48,8 @@
   (visit-sparql [kb visitor sparql-string]
     "calls visitor function on bindings for side effects")
   (construct-sparql [kb sparql-string])
-  (construct-visit-sparql [kb visitor sparql-string]))
+  (construct-visit-sparql [kb visitor sparql-string])
+  (update-sparql [kb sparql-string]))
 
 ;; ---------------------------------------------------------- helper fns --- ;;
 
@@ -632,6 +633,11 @@
      (binding [*kb* kb]
        (visit-sparql kb visitor sparql-string))))
 
+(defn sparql-update
+  ([sparql-string] (sparql-update *kb* sparql-string))
+  ([kb sparql-string]
+   (binding [*kb* kb]
+     (update-sparql kb sparql-string))))
 
 (defn sparql-construct
   ([sparql-string]
