@@ -49,16 +49,21 @@
 ;; --------------------------------------------------------
 
 (defn sesame-register-ns [kb short long]
-  (.setNamespace (connection! kb) short long))
+  (try
+    (.setNamespace (connection! kb) short long)
+  (catch UnsupportedOperationException e
+    (println "Unable to register namespace with KB. This operation is not supported by this sesame server implementation."))))
 
 ;;TODO? use clj-ify under the hood?
 (defn sesame-server-ns-map [kb]
-  (reduce (fn [m ns]
-            (assoc m (.getPrefix ns) (.getName ns)))
-          {}
-          (doall
-            (sesame-iteration-seq
-              (.getNamespaces (connection! kb))))))
+  (try
+    (reduce (fn [m ns]
+              (assoc m (.getPrefix ns) (.getName ns)))
+            {}
+            (doall
+              (sesame-iteration-seq
+                (.getNamespaces (connection! kb)))))
+  (catch UnsupportedOperationException e (do (println "getNamespaces is not supported by this sesame server implementation.")))))
 
 ;; --------------------------------------------------------
 ;; sesame-ify
