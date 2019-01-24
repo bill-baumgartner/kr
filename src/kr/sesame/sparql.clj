@@ -125,8 +125,7 @@
                                    query-string)))
 
 (defn sesame-query-sparql [kb query-string]
-  (let [conn (connection! kb)
-        tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
+  (let [tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
     ;(.setIncludeInferred tuplequery *use-inference*) ;this line is the cause of 'distinct' error for blazegraph. The blazegraph quad store does not use inference, so it doesn't matter if this is set.
@@ -134,8 +133,7 @@
 
 
 (defn sesame-visit-sparql [kb visitor query-string]
-  (let [conn (connection! kb)
-        tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
+  (let [tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
     ;(.setIncludeInferred tuplequery *use-inference*) ;this line is the cause of 'distinct' error for blazegraph. The blazegraph quad store does not use inference, so it doesn't matter if this is set.
