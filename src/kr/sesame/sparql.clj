@@ -132,7 +132,8 @@
     (clj-ify kb (.evaluate ^TupleQuery tuplequery))))
 
 (defn sesame-update-sparql [kb query-string]
-  (let [update (.prepareUpdate ^RepositoryConnection (connection! kb)
+  (let [
+        update (.prepareUpdate ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
     (.execute ^Update update)))
