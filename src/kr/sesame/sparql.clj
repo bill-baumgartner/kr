@@ -9,7 +9,7 @@
 
   (import org.openrdf.model.impl.StatementImpl
           org.openrdf.model.impl.URIImpl
-          
+
           org.openrdf.repository.Repository
           org.openrdf.repository.http.HTTPRepository
           org.openrdf.repository.http.HTTPTupleQuery
@@ -19,7 +19,7 @@
           org.openrdf.query.TupleQuery
           org.openrdf.query.GraphQuery
 
-          
+
           org.openrdf.query.TupleQueryResult
           org.openrdf.query.QueryLanguage
           org.openrdf.query.resultio.TupleQueryResultParserRegistry
@@ -35,10 +35,10 @@
 (defn count-results
   ([results] (count-results results 0))
   ([results count]
-     (if (.hasNext results)
-       (do (.next results)
-           (recur results (+ 1 count)))
-       count)))
+   (if (.hasNext results)
+     (do (.next results)
+         (recur results (+ 1 count)))
+     count)))
 
 
 ;; (defn results-seq [results]
@@ -47,7 +47,7 @@
 ;;      (cons 
 ;;       (.next results)
 ;;       (results-seq results)))))
-  
+
 ;;TODO? are these even useful?
 
 (defn result-to-map [kb result]
@@ -58,9 +58,9 @@
 
 (defn get-results-for-key [key results]
   (set
-   (map (fn [result]
-          (result key))
-        results)))
+    (map (fn [result]
+           (result key))
+         results)))
 
 ;;; --------------------------------------------------------
 ;;; result processing helpsers
@@ -77,16 +77,16 @@
           {}
           bindings))
 
-(defn result-map [kb results] 
+(defn result-map [kb results]
   (lazy-seq
-   ;(when-let [s (results-seq results)]
-   (when-let [s (seq results)]
-     (cons 
-      (reduce conj {} (map (fn [binding]
-                             (vector (variable (.getName binding))
-                                     (clj-ify kb (.getValue binding))))
-                           (first s)))
-      (result-map kb (rest s))))))
+    ;(when-let [s (results-seq results)]
+    (when-let [s (seq results)]
+      (cons
+        (reduce conj {} (map (fn [binding]
+                               (vector (variable (.getName binding))
+                                       (clj-ify kb (.getValue binding))))
+                             (first s)))
+        (result-map kb (rest s))))))
 
 ;;TODO 
 ;; the above can be made to capture the kb if made like the following
@@ -111,7 +111,7 @@
   (let [r (doall (map (partial clj-ify kb) (sesame-iteration-seq results)))]
     (.close results)
     r))
-    
+
 
 ;;; --------------------------------------------------------
 ;;; main queries
@@ -121,16 +121,15 @@
 (defn sesame-ask-sparql [kb query-string]
   (.evaluate ^BooleanQuery
              (.prepareBooleanQuery ^RepositoryConnection (connection! kb)
-                                 QueryLanguage/SPARQL
-                                 query-string)))
+                                   QueryLanguage/SPARQL
+                                   query-string)))
 
 (defn sesame-query-sparql [kb query-string]
   (let [conn (connection! kb)
         tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
-    (println (str "################### sesame-query-sparql connection type: " (type conn) " QUERY: " query-string))
-    (.setIncludeInferred tuplequery *use-inference*)
+    ;(.setIncludeInferred tuplequery *use-inference*) ;this line is the cause of 'distinct' error for blazegraph. The blazegraph quad store does not use inference, so it doesn't matter if this is set.
     (clj-ify kb (.evaluate ^TupleQuery tuplequery))))
 
 
@@ -139,8 +138,7 @@
         tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
-    (println (str "################### sesame-visit-sparql connection type: " (type conn) " QUERY: " query-string))
-    (.setIncludeInferred tuplequery *use-inference*)
+    ;(.setIncludeInferred tuplequery *use-inference*) ;this line is the cause of 'distinct' error for blazegraph. The blazegraph quad store does not use inference, so it doesn't matter if this is set.
     (.evaluate ^TupleQuery tuplequery
                (proxy [TupleQueryResultHandlerBase] []
                  (handleSolution [bindings]
@@ -151,7 +149,7 @@
         tuplequery (.prepareTupleQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        query-string)]
-    (.setIncludeInferred tuplequery *use-inference*)
+    ;(.setIncludeInferred tuplequery *use-inference*) ;this line is the cause of 'distinct' error for blazegraph. The blazegraph quad store does not use inference, so it doesn't matter if this is set.
     (.evaluate ^TupleQuery tuplequery
                (proxy [TupleQueryResultHandlerBase] []
                  (handleSolution [bindings]
@@ -167,11 +165,11 @@
   ;;TODO this is rediculous, really? there's nothing better?
   ;;     why is the number a raw string? (is this true of all stores?)
   ;;(read-string
-   (second
+  (second
     (first
-     (first 
-      (sesame-query-sparql kb
-                           (sparql-1-1-count-query pattern options))))));)
+      (first
+        (sesame-query-sparql kb
+                             (sparql-1-1-count-query pattern options)))))) ;)
 
 
 (defn sesame-construct-sparql [kb sparql-string]
@@ -179,16 +177,16 @@
   (let [graphquery (.prepareGraphQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        sparql-string)]
-    (.setIncludeInferred graphquery *use-inference*)
+    ;(.setIncludeInferred graphquery *use-inference*) ;this line is the cause of 'distinct' error for blazegraph. The blazegraph quad store does not use inference, so it doesn't matter if this is set.
     (clj-ify kb (.evaluate ^GraphQuery graphquery))))
-    ;;(.evaluate ^GraphQuery graphquery)))
+;;(.evaluate ^GraphQuery graphquery)))
 
 
 (defn sesame-construct-visit-sparql [kb visitor sparql-string]
   (let [graphquery (.prepareGraphQuery ^RepositoryConnection (connection! kb)
                                        QueryLanguage/SPARQL
                                        sparql-string)]
-    (.setIncludeInferred graphquery *use-inference*)
+    ;(.setIncludeInferred graphquery *use-inference*) ;this line is the cause of 'distinct' error for blazegraph. The blazegraph quad store does not use inference, so it doesn't matter if this is set.
     (.evaluate ^GraphQuery graphquery
                (proxy [RDFHandlerBase] []
                  (handleStatement [stmt]
@@ -206,7 +204,7 @@
 
 (defn sesame-count-pattern [kb pattern & [options]]
   ;;check if 1.1 support is available and if so try that way
-  (if (has-feature? kb sparql-1-1) ;use fast 1.1 query
+  (if (has-feature? kb sparql-1-1)                          ;use fast 1.1 query
     (sesame-count-1-1 kb pattern options)
     ;;otherwise turn and burn
     (sesame-count-sparql kb (sparql-select-query pattern options))))
