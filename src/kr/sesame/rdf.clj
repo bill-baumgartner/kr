@@ -66,7 +66,7 @@
             (doall
               (sesame-iteration-seq
                 (.getNamespaces (connection! kb)))))
-  (catch UnsupportedOperationException e (do (println "getNamespaces is not supported by this sesame server implementation.")))))
+  (catch UnsupportedOperationException e (do (println "===== WARNING: getNamespaces is not supported by this sesame server implementation. =====")))))
 
 ;; --------------------------------------------------------
 ;; sesame-ify
