@@ -49,7 +49,13 @@
 ;; --------------------------------------------------------
 
 (defn sesame-register-ns [kb short long]
-    (.setNamespace (connection! kb) short long))
+  (try
+    (.setNamespace (connection! kb) short long)
+    ;; todo move this try/catch to a higher level so that a warning message isn't printed every single time a namespace register is attempted
+    ;; todo for now, live with code smell of empty catch block
+    (catch UnsupportedOperationException e)))
+      ;(do (println "setNamespace is not supported by this sesame server implementation.")))))
+
 
 ;;TODO? use clj-ify under the hood?
 (defn sesame-server-ns-map [kb]

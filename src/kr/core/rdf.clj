@@ -161,18 +161,11 @@
   (update-ns-mapping kb short long))
 
 (defn register-namespaces [kb short-to-long-pairs]
-  (try
+  (if (not (nil? kb))
     (reduce (fn [kb [short long]]
-              (register-ns kb short long))
+              (register-namespace kb short long))
             kb
-            short-to-long-pairs)
-    (catch UnsupportedOperationException e
-      (println "Unable to register namespace with KB. This operation is not supported by this sesame server implementation.")))
-  (reduce (fn [kb [short long]]
-            (update-ns-mapping kb short long))
-          kb
-          short-to-long-pairs))
-
+            short-to-long-pairs)))
 
 (defn ns-map-to-short [kb]
   (get kb :ns-map-to-short {}))
