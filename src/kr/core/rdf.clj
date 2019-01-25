@@ -56,36 +56,36 @@
 ;;; --------------------------------------------------------
 
 (defprotocol rdfKB
- 
+
   (root-ns-map [kb] "gets the servers version of the namesapce map")
   ;; (ns-maps [kb] "gets the pair of namespace mappings")
   ;; (ns-map-to-short [kb] "gets the namespace mappings from long to short")
   ;; (ns-map-to-long [kb] "gets the namespace mappings from short to long")
   (register-ns [kb short long] "adds an namespace mapping")
-  
+
   (create-resource [kb name] "creates a resource object")
   (create-property [kb name] "creates a property object")
-  (create-literal [kb val] ;"creates a literal, infers type")
-                  [kb val type] "creates a literal object, forces type")
+  (create-literal [kb val]                                  ;"creates a literal, infers type")
+    [kb val type] "creates a literal object, forces type")
   (create-string-literal [kb str] [kb str lang]
-                         "creates a string literal with optional language")
+    "creates a string literal with optional language")
   (create-blank-node [kb name] "creates a blank-node object")
   (create-statement [kb s p o] "creates a statement")
-  
+
 
   (add-statement [kb stmt] [kb stmt context] [kb s p o] [kb s p o context]
-                 "adds a statement to the kb")
+    "adds a statement to the kb")
   (add-statements [kb stmts] [kb stmts context] "adds a statement to the kb")
 
-  (ask-statement ;;[kb stmt] [kb stmt context] [kb s p o] 
-                 [kb s p o context]
-                 ;;[kb stmt] [kb s p o]
-                 "boolean asks for a statement or pattern in the kb")
+  (ask-statement                                            ;;[kb stmt] [kb stmt context] [kb s p o]
+    [kb s p o context]
+    ;;[kb stmt] [kb s p o]
+    "boolean asks for a statement or pattern in the kb")
 
-  (query-statement ;[kb stmt] [kb stmt context] [kb s p o]
-                   [kb s p o context]
-                   ;;[kb stmt] [kb s p o]
-                   "gets bindings for statement pattern")
+  (query-statement                                          ;[kb stmt] [kb stmt context] [kb s p o]
+    [kb s p o context]
+    ;;[kb stmt] [kb s p o]
+    "gets bindings for statement pattern")
 
   (load-rdf-file [kb file] [kb file type] "loads an rdf file")
   (load-rdf-stream [kb stream] [kb stream type] "loads rdf from stream")
@@ -120,31 +120,31 @@
 
 (defn update-ns-mapping [kb short long]
   (assoc kb
-    :ns-map-to-short (assoc (:ns-map-to-short kb) long  short)
-    :ns-map-to-long  (assoc (:ns-map-to-long kb)  short long)))
-  ;; (register-ns kb short long)
-  ;; (swap! (ns-maps kb)
-  ;;        (fn [{to-short :ns-map-to-short to-long :ns-map-to-long}]
-  ;;          {:ns-map-to-short (assoc to-short long short)
-  ;;           :ns-map-to-long (assoc to-long short long)})))
+    :ns-map-to-short (assoc (:ns-map-to-short kb) long short)
+    :ns-map-to-long (assoc (:ns-map-to-long kb) short long)))
+;; (register-ns kb short long)
+;; (swap! (ns-maps kb)
+;;        (fn [{to-short :ns-map-to-short to-long :ns-map-to-long}]
+;;          {:ns-map-to-short (assoc to-short long short)
+;;           :ns-map-to-long (assoc to-long short long)})))
 
-    ;; (swap! (ns-maps kb)
-    ;;      (fn [{to-short :ns-map-to-short to-long :ns-map-to-long}]
-    ;;        {:ns-map-to-short long-to-short
-    ;;         :ns-map-to-long short-to-long}))))    
+;; (swap! (ns-maps kb)
+;;      (fn [{to-short :ns-map-to-short to-long :ns-map-to-long}]
+;;        {:ns-map-to-short long-to-short
+;;         :ns-map-to-long short-to-long}))))
 
 (defn update-namespaces [kb short-to-long-pairs]
   (reduce (fn [kb [short long]]
             (update-ns-mapping kb short long))
           kb
           short-to-long-pairs))
-  ;;(synch-ns-mappings kb)
-  ;; (dorun
-  ;;  (map (fn [[short long]]
-  ;;         (update-ns-mapping kb short long))
-  ;;       short-to-long-pairs))
-  ;; kb
-  ;; (synch-ns-mappings kb))
+;;(synch-ns-mappings kb)
+;; (dorun
+;;  (map (fn [[short long]]
+;;         (update-ns-mapping kb short long))
+;;       short-to-long-pairs))
+;; kb
+;; (synch-ns-mappings kb))
 
 (defn synch-ns-mappings [kb]
   (let [short-to-long (root-ns-map kb)
@@ -154,15 +154,22 @@
                               short-to-long)]
     (assoc kb
       :ns-map-to-short long-to-short
-      :ns-map-to-long  short-to-long)))
+      :ns-map-to-long short-to-long)))
 
 (defn register-namespace [kb short long]
   (register-ns kb short long)
   (update-ns-mapping kb short long))
 
 (defn register-namespaces [kb short-to-long-pairs]
+  (try
+    (reduce (fn [kb [short long]]
+              (register-ns kb short long))
+            kb
+            short-to-long-pairs)
+    (catch UnsupportedOperationException e
+      (println "Unable to register namespace with KB. This operation is not supported by this sesame server implementation.")))
   (reduce (fn [kb [short long]]
-            (register-namespace kb short long))
+            (update-ns-mapping kb short long))
           kb
           short-to-long-pairs))
 
@@ -195,30 +202,30 @@
   ([] nil)
   ([x] x)
   ([x y] (cond
-          (nil? x) y
-          (nil? y) x
-          (< (.length (name y)) (.length (name x))) y
-          :else x)))
+           (nil? x) y
+           (nil? y) x
+           (< (.length (name y)) (.length (name x))) y
+           :else x)))
 
 ;; TODO
 ;; is there anyway to speed this up?  this could get called once per sym
-(defn infer-longest-ns 
+(defn infer-longest-ns
   ([uri-string] (infer-longest-ns *kb* *ns-map-to-short* uri-string))
   ([kb uri-string] (infer-longest-ns kb *ns-map-to-short* uri-string))
   ([kb to-short-map uri-string]
-     (or
-      (try (or (reduce shortest-name
-                       (map (partial attempt-long-name-to-sym uri-string)
-                            to-short-map))
-               (reduce shortest-name
-                       (map (partial attempt-long-name-to-sym uri-string)
-                            (and kb
-                                 (ns-map-to-short kb)))))
-           (catch NullPointerException npe
-             (prn "rdf/infer-longest-ns caught npe" uri-string)))
-      ;;couldn't find an ns - just make a symbol out of it?
-      ;;TODO this is kinda broken - will infer a break at at / and eat one?
-      (symbol uri-string))))
+   (or
+     (try (or (reduce shortest-name
+                      (map (partial attempt-long-name-to-sym uri-string)
+                           to-short-map))
+              (reduce shortest-name
+                      (map (partial attempt-long-name-to-sym uri-string)
+                           (and kb
+                                (ns-map-to-short kb)))))
+          (catch NullPointerException npe
+            (prn "rdf/infer-longest-ns caught npe" uri-string)))
+     ;;couldn't find an ns - just make a symbol out of it?
+     ;;TODO this is kinda broken - will infer a break at at / and eat one?
+     (symbol uri-string))))
 
 
 ;; (defn infer-first-ns [uri-string]
@@ -233,32 +240,32 @@
 ;;           ;;   (symbol short (s(
 
 
-(defn long-ns-to-short-ns 
+(defn long-ns-to-short-ns
   ([long] (long-ns-to-short-ns *kb* *ns-map-to-short* long))
   ([kb long] (long-ns-to-short-ns kb *ns-map-to-short* long))
   ([kb ns-map long]
-     (or (and ns-map
-              (get ns-map long))
-         (and kb
-              (get (ns-map-to-short kb) long)))))
+   (or (and ns-map
+            (get ns-map long))
+       (and kb
+            (get (ns-map-to-short kb) long)))))
 
-(defn short-ns-to-long-ns 
+(defn short-ns-to-long-ns
   ([short] (short-ns-to-long-ns *kb* *ns-map-to-long* short))
   ([kb short] (short-ns-to-long-ns kb *ns-map-to-long* short))
   ([kb ns-map short]
-     (or (and ns-map
-              (get ns-map short))
-         (and kb
-              (get (ns-map-to-long kb) short)))))
+   (or (and ns-map
+            (get ns-map short))
+       (and kb
+            (get (ns-map-to-long kb) short)))))
 
 
-(defn sym-to-long-name 
+(defn sym-to-long-name
   ([sym] (sym-to-long-name *kb* *ns-map-to-long* sym))
   ([kb sym] (sym-to-long-name kb *ns-map-to-long* sym))
-  ([kb ns-map sym] 
-     (str (or (short-ns-to-long-ns kb ns-map (namespace sym))
-              (namespace sym))
-          (name sym))))
+  ([kb ns-map sym]
+   (str (or (short-ns-to-long-ns kb ns-map (namespace sym))
+            (namespace sym))
+        (name sym))))
 
 ;; (defn find-maximal-namespace [namespaces uri-str]
 ;;   (infer-longest-ns kb uri-str))
@@ -270,12 +277,12 @@
   ([full-name] (convert-string-to-sym *kb* full-name))
   ([kb full-name] (infer-longest-ns kb full-name))
   ([kb full-name preferred-namespace preferred-local]
-     (or
-      (let [preferred-short (long-ns-to-short-ns kb preferred-namespace)]
-        (and preferred-short
-             (attempt-long-name-to-sym full-name [preferred-namespace 
-                                                  preferred-short])))
-      (convert-string-to-sym kb full-name))))
+   (or
+     (let [preferred-short (long-ns-to-short-ns kb preferred-namespace)]
+       (and preferred-short
+            (attempt-long-name-to-sym full-name [preferred-namespace
+                                                 preferred-short])))
+     (convert-string-to-sym kb full-name))))
 
 
 ;;; --------------------------------------------------------
@@ -295,14 +302,14 @@
 
 (defn anon [a]
   (cond
-   (string? a) (anon (symbol a))
-   ;;(anon? a) a
-   (symbol? a) (symbol *anon-ns-name* (name a))))
+    (string? a) (anon (symbol a))
+    ;;(anon? a) a
+    (symbol? a) (symbol *anon-ns-name* (name a))))
 
 ;;; --------------------------------------------------------
 ;;; creating Resources/Properties from clj data
 ;;; --------------------------------------------------------
-  
+
 ;; (defn anon-str-to-id-str [anon-str]
 ;;   (subs anon-str (.length *anon-name*)))
 
@@ -317,7 +324,7 @@
 ;;TODO ERROR this returns a string or a bnode - not right
 (defn resource-ify-sym [kb s]
   (if (anon? s)
-    (blank-node kb (name s))  ;(anon-str-to-id-str (name s)))
+    (blank-node kb (name s))                                ;(anon-str-to-id-str (name s)))
     (sym-to-long-name kb s)))
 
 (defn resource-ify-uri [kb uri]
@@ -376,30 +383,30 @@
 (defn literal
   ([x] (literal *kb* x))
   ([kb x] (cond
-           ;;not what you want
-           (not *infer-literal-type*) (create-literal kb (str x))
+            ;;not what you want
+            (not *infer-literal-type*) (create-literal kb (str x))
 
-           ;; integers are getting coerced wrong - force it
-           ;; integer? tests for all integer types (int, long, bigint,..)
-           (integer? x) (create-literal kb (str x) 'xsd/integer)
+            ;; integers are getting coerced wrong - force it
+            ;; integer? tests for all integer types (int, long, bigint,..)
+            (integer? x) (create-literal kb (str x) 'xsd/integer)
 
-           ;;boxed value - just use it
-           (sequential? x) (apply create-literal kb (str (first x)) (rest x))
-           ;; (and (sequential? x)
-           ;;      (rest x))
+            ;;boxed value - just use it
+            (sequential? x) (apply create-literal kb (str (first x)) (rest x))
+            ;; (and (sequential? x)
+            ;;      (rest x))
 
-           ;;special strings
-           ;;(and (= java.lang.String (type x))
-           (and (string? x)
-                *use-default-language*
-                *string-literal-language*)
-           (create-literal kb x *string-literal-language*)
+            ;;special strings
+            ;;(and (= java.lang.String (type x))
+            (and (string? x)
+                 *use-default-language*
+                 *string-literal-language*)
+            (create-literal kb x *string-literal-language*)
 
-           ;;everything else including strings when there is no default lang
-           :else (create-literal kb x))))
+            ;;everything else including strings when there is no default lang
+            :else (create-literal kb x))))
 
 
-(defn object 
+(defn object
   ([x] (object *kb* x))
   ([kb x] (if (or (= (type x) clojure.lang.Symbol)
                   (= (type x) java.net.URI))
@@ -433,8 +440,8 @@
 (defn unique-node
   ([ns] (unique-node ns "" ""))
   ([ns prefix] (unique-node ns prefix ""))
-  ([ns prefix suffix] 
-     (symbol ns (str prefix (UUID/randomUUID) suffix))))
+  ([ns prefix suffix]
+   (symbol ns (str prefix (UUID/randomUUID) suffix))))
 
 
 
@@ -471,19 +478,19 @@
 (defn reify-as
   ([[s p o] r] (reify-as s p o r))
   ([s p o r]
-  `((~r rdf/type rdf/Statement)
-    (~r rdf/subject ~s)
-    (~r rdf/predicate ~p)
-    (~r rdf/object ~o))))
+   `((~r rdf/type rdf/Statement)
+      (~r rdf/subject ~s)
+      (~r rdf/predicate ~p)
+      (~r rdf/object ~o))))
 
 (defn reify!
   "forces new reification"
   ([s] (reify! s (bnode)))
-  ([[s p o] r]   
-     `((~r rdf:type rdf:Statement)
-       (~r rdf:subject ~s)
-       (~r rdf:predicate ~p)
-       (~r rdf:object ~o))))
+  ([[s p o] r]
+   `((~r rdf:type rdf:Statement)
+      (~r rdf:subject ~s)
+      (~r rdf:predicate ~p)
+      (~r rdf:object ~o))))
 
 
 (defn reify-query-statement
@@ -536,15 +543,15 @@
 
 
 ;;pays attention to *graph*
-(defn load-rdf 
+(defn load-rdf
   ([kb source]
-     (if (instance? File source)
-       (load-rdf-file kb source)
-       (load-rdf-stream kb source)))
+   (if (instance? File source)
+     (load-rdf-file kb source)
+     (load-rdf-stream kb source)))
   ([kb source type]
-     (if (instance? File source)
-       (load-rdf-file kb source type)
-       (load-rdf-stream kb source type))))
+   (if (instance? File source)
+     (load-rdf-file kb source type)
+     (load-rdf-stream kb source type))))
 
 
 
