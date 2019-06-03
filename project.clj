@@ -1,4 +1,4 @@
-(defproject edu.ucdenver.ccp/kr "1.5.0-sesame2.7.12-SNAPSHOT"
+(defproject edu.ucdenver.ccp/kr "1.5.0-sesame2.7.12"
   :description "knowledge representation and reasoning tools"
   :url "https://github.com/UCDenver-ccp/kr"
   :license {:name "Eclipse Public License"
